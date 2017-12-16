@@ -7,7 +7,7 @@ from utils import plot
 from utils import softmax
 
 def main():
-    N = 500
+    N = 300
     din = 2
     dout = 4
     dh1 = 100
@@ -15,12 +15,12 @@ def main():
     dhidden = [dh1, dh2]
     xArray, yArray = dataGen(N, din)
     n = NeuralNet(din, dout, dhidden)
-    n.train(xArray, yArray, 100, 0.001)
+    n.train(xArray, yArray, 1000, 0.01)
     yhat = n.test(xArray)
     print(yhat)
     plot(xArray[:,0], xArray[:,1], yArray, yhat)
 
-   
+    return
     fc1 = FullyConnectedLayer(din, dh1)
     fc2 = FullyConnectedLayer(dh1, dh2)
     fc3 = FullyConnectedLayer(dh2, dout)

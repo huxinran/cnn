@@ -4,78 +4,90 @@ from utils import softmax
 
 class NeuralNet:
     def __init__(self, din, dout, dhidden):
-        self.l = len(dhidden)
-        self.din = din
-        self.dout = dout
-        self.dhidden = dhidden
+        self.dim = []
+        self.dim.append(din)
+        self.dim.extend(dhidden)
+        self.dim.append(dout)
+
         self.layer = []
-        self.layer.append(FullyConnectedLayer(din, dhidden[0]))
-        for i in range(self.l - 1):
-            self.layer.append(FullyConnectedLayer(dhidden[i], dhidden[i + 1]))
-        self.layer.append(FullyConnectedLayer(dhidden[-1], dout))
+        print(self.dim)
+        for i in range(len(self.dim) - 1):
+            self.layer.append(FullyConnectedLayer(self.dim[i], self.dim[i + 1]))
         
+        self.l  = len(self.layer)
+        self.w  = [l.initWeight()  for l in self.layer]
+        self.dw = [l.dw  for l in self.layer]
         
-        self.x  = [l.x  for l in self.layer]
-        self.w  = [l.w  for l in self.layer]
-        self.y  = [l.y  for l in self.layer]
-
-        self.dx = [l.dx for l in self.layer]
-        self.dw = [l.dw for l in self.layer]
-        self.dy = [l.dy for l in self.layer]
-
     def __repr__(self):
         return 'NeuralNet with {0.din} to {0.dhidden} to {0.dout}'.format(self)
 
-    def forward(self, x):
-        for i in range(len(self.layer)):
-            self.x[i] = x if i == 0 else np.maximum(0, self.y[i - 1])
-            self.y[i] = self.layer[i].forward(self.x[i], self.w[i]) 
-            #print(i)
-            #print(self.x, self.w, self.y)
-        
+    def forward(self, _x, wArray):
+        xArray = []
+        x = np.array(_x)
+        xArray.append(np.array(x))
+        for i in range(self.l):
+            y = self.layer[i].forward(x, wArray[i])
+            if i != self.l - 1:
+                y = np.maximum(0, y)
 
-        return self.y[-1]
+            xArray.append(np.array(y))
+            x = y
+        return xArray
 
-    def backward(self, dy):
-        for i in reversed(range(len(self.layer))):
-            self.dy[i] = dy if i == len(self.layer) - 1 else self.dx[i + 1] * (1 * self.y[i] > 0)
-            self.dx[i], self.dw[i] = self.layer[i].backward(self.x[i], self.w[i], self.dy[i])
-        return self.dw
+    def backward(self, xArray, wArray, _dy):
+        dwArray = []
+        dy = np.array(_dy)
+        for i in reversed(range(self.l)):
+            dx, dw = self.layer[i].backward(xArray[i], wArray[i], dy)            
+            dwArray.insert(0, np.array(dw))
+            if i != self.l - 1:
+                dx *= dx * (1 * (xArray[i] > 0))
 
-    def loss(self, yhat, y):
-        p = softmax(yhat).reshape(1, -1)
-        loss = -(-10 if p[0][y] < np.exp(-10) else np.log(p[0][y]))
-        dy = p
-        dy[0][y] -= 1  
-        return loss, dy
+            dy = dx
+        return dwArray
+
+    def loss(self, s, qIdx):
+        p = softmax(s).reshape(1, -1)
+        l = 10 if p[0][qIdx] < np.exp(-10) else -np.log(p[0][qIdx])
+        p[0][qIdx] -= 1
+        return l, p
 
     def trainOnce(self, x, y, r):
-        dwTotal = self.dw
-        lossTotal = 0
+        dwArrayTotal = self.dw
+        loss = 0
+        correct = 0
         n = x.shape[0]
-        for i in range(n):
-            l, dy = self.loss(self.forward(x[i]), y[i])
-            dw = self.backward(dy)
-            
-            lossTotal += l
-            for j in range(len(dwTotal)):
-                dwTotal[j] += dw[j]
-        
-        for j in range(len(dwTotal)):
-            self.w[j] -= dwTotal[j] / n
+        wArray = self.w
 
-        return lossTotal / n
+        for dw in dwArrayTotal:
+            dw.fill(0)
+
+        for i in range(n):
+            xArray  = self.forward(x[i], wArray)
+            l, dy   = self.loss(xArray[-1], y[i])
+            loss += l
+            if y[i] == np.argmax(xArray[-1]):
+                correct += 1
+
+            dwArray = self.backward(xArray, wArray, dy)
+            
+            
+            for j in range(self.l):
+                dwArrayTotal[j] += dwArray[j]
+        
+        for i in range(self.l):
+            self.w[j] -= dwArrayTotal[j] / n * r
+
+        return loss / n, correct / n
 
     def train(self, x, y, iter, r):
         for t in range(iter):
-            l = self.trainOnce(x, y, r)
-            for j in range(len(self.layer)):
-                self.layer[j].w = self.w[j]
-            print(t, l)
+            l, correct_rate = self.trainOnce(x, y, r)
+            print(t, l, correct_rate)
     
     def test(self, x):
         y = []
         for i in range(x.shape[0]):
-            yhat = self.forward(x[i])
-            y.append(np.argmax(yhat))
+            yhat = self.forward(x[i], self.w)
+            y.append(np.argmax(yhat[-1]))
         return np.array(y)
