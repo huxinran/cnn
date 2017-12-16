@@ -83,7 +83,9 @@ class NeuralNet:
     def train(self, x, y, iter, r):
         for t in range(iter):
             l, correct_rate = self.trainOnce(x, y, r)
-            print(t, l, correct_rate)
+            s = 'Iter: {0:4d} | Loss: {1:2.2f} | CorrectRate: {2:2.2f} | StepSize:{3:2.2f}\r'.format(t, l, correct_rate, r)
+            print('\r', end='')
+            print(s, end='')
     
     def test(self, x):
         y = []

@@ -10,12 +10,12 @@ def main():
     N = 300
     din = 2
     dout = 4
-    dh1 = 100
-    dh2 = 100
+    dh1 = 64
+    dh2 = 128
     dhidden = [dh1, dh2]
     xArray, yArray = dataGen(N, din)
     n = NeuralNet(din, dout, dhidden)
-    n.train(xArray, yArray, 1000, 0.01)
+    n.train(xArray, yArray, 10000, 0.01)
     yhat = n.test(xArray)
     print(yhat)
     plot(xArray[:,0], xArray[:,1], yArray, yhat)
