@@ -37,18 +37,18 @@ def plot(x, y, category1, category2):
 
 
 def main():
-    N = 300
+    N = 500
     din = 2
     dout = 4
-    dh1 = 30
-    dh2 = 30
+    dh1 = 100
+    dh2 = 100
 
     fc1 = FullyConnectedLayer(din, dh1)
     fc2 = FullyConnectedLayer(dh1, dh2)
     fc3 = FullyConnectedLayer(dh2, dout)
 
     xArray, yArray = dataGen(N, din)
-    T = 100
+    T = 300
 
 
     #plot(xArray[:,0], xArray[:,1], yArray)
@@ -79,7 +79,7 @@ def main():
 
             p = softmax(y3)
 
-            l = -np.where(p[y] < 0.000001, -10, np.log2(p[y]))
+            l = -np.where(p[0][y] < 0.000001, -10, np.log2(p[0][y]))
             
             c[i] = np.argmax(p)
             if c[i] == y:
@@ -88,7 +88,7 @@ def main():
             loss += l
 
             dy3 = p
-            dy3[y] -= 1
+            dy3[0][y] -= 1
             dx3, dw3 = fc3.backward(x3, w3, dy3)
 
             dy2 = dx3 * (1 * y2 > 0)
@@ -102,7 +102,7 @@ def main():
             dw3_total += dw3
 
 
-        r = 0.01
+        r = 0.05
         loss /= N
         correct /= N
         dw1_total /= N
