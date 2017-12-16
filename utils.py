@@ -1,8 +1,6 @@
-<<<<<<< HEAD
-=======
 from PIL import Image
 
->>>>>>> f91831aaff2d941e5e60b416fd0c9ae05f8ea307
+
 def unpickle(file):
     with open(file, 'rb') as f:
         dict = pickle.load(f, encoding='bytes')
@@ -23,12 +21,7 @@ def toImg(rawArray):
 
     
     return Image.fromarray(data, 'RGB')
-<<<<<<< HEAD
 
-
-=======
-    
->>>>>>> f91831aaff2d941e5e60b416fd0c9ae05f8ea307
     d = unpickle("./data/data_batch_1")
     
     for k in d.keys():
@@ -37,13 +30,5 @@ def toImg(rawArray):
     for i in range(10000):
         img = toImg(d['data'][i])
         img.show()
-<<<<<<< HEAD
+
         input('next') 
-=======
-        input('next') 
-
-
-
-from value import Data
-from value import Variable
->>>>>>> f91831aaff2d941e5e60b416fd0c9ae05f8ea307
