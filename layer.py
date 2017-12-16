@@ -23,20 +23,25 @@ class FullyConnectedLayer:
     |dy   | (1 , dout)       | output gradient                                 |
     ============================================================================
 
-
-
+    List of Instance Method
+    ============================================================================
+    |name     | type                   | detail                                |
+    ============================================================================
+    |forward  | (x, w) => y            | forward feed                          |
+    |backward | (x, w, dy) => (dx, dw) | back prop                             |
+    ============================================================================
     '''
     def __init__(self, din, dout):
         self.din = din
         self.dout = dout
         
-        self.x = np.empty([1, din])
-        self.w = np.empty([din + 1, dout])
-        self.y = np.empty([1, dout])
+        self.x = np.zeros([1, din])
+        self.w = np.zeros([din + 1, dout])
+        self.y = np.zeros([1, dout])
 
-        self.dx = np.empty([1, din])
-        self.dw = np.empty([din + 1, dout])
-        self.dy = np.empty([1, dout])
+        self.dx = np.zeros([1, din])
+        self.dw = np.zeros([din + 1, dout])
+        self.dy = np.zeros([1, dout])
 
         self.w = np.random.normal(0, 1, [din + 1, dout])
 

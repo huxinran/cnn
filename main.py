@@ -1,40 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt 
 from layer import FullyConnectedLayer 
-
-def softmax(s):
-    t = np.exp(s - s.max())
-    return t / np.sum(t) 
-
-def dataGen(n, d):
-    x = np.random.normal(0, 1, [n, d])
-    y = 1 * np.logical_or(np.logical_and(x[:, 0] > 0, x[:, 1] > 0), np.logical_and(x[:, 0] < 0, x[:, 1] < 0)) 
-    for i in range(n):
-        if np.sum(np.square(x[i])) > 2.0:
-            y[i] = 2
-        if np.sum(np.square(x[i])) < 1.0:
-            y[i] = 3
-    return x, y
-
-def plot(x, y, category1, category2):
-    plt.subplot(1, 2, 1)
-    #c = np.array(['r', 'b', 'g', 'k'])
-    #plt.plot(x, y, color=c[category1])
-
-    plt.plot(x[category1==0], y[category1==0], color='b', marker='o',  linestyle='', markersize=1)
-    plt.plot(x[category1==1], y[category1==1], color='r', marker='o',  linestyle='', markersize=1)
-    plt.plot(x[category1==2], y[category1==2], color='g', marker='o',  linestyle='', markersize=1)
-    plt.plot(x[category1==3], y[category1==3], color='k', marker='o',  linestyle='', markersize=1)
-
-    plt.subplot(1, 2, 2)
-    #plt.plot(x, y, color=c[category2])
-    plt.plot(x[category2==1], y[category2==1], color='r', marker='o',  linestyle='', markersize=1)
-    plt.plot(x[category2==0], y[category2==0], color='b', marker='o',  linestyle='', markersize=1)
-    plt.plot(x[category2==2], y[category2==2], color='g', marker='o',  linestyle='', markersize=1)
-    plt.plot(x[category2==3], y[category2==3], color='k', marker='o',  linestyle='', markersize=1)
-    
-    plt.show()
-
+from network import NeuralNet
+from utils import dataGen
+from utils import plot
+from utils import softmax
 
 def main():
     N = 500
@@ -42,12 +12,20 @@ def main():
     dout = 4
     dh1 = 100
     dh2 = 100
+    dhidden = [dh1, dh2]
+    xArray, yArray = dataGen(N, din)
+    n = NeuralNet(din, dout, dhidden)
+    n.train(xArray, yArray, 100, 0.001)
+    yhat = n.test(xArray)
+    print(yhat)
+    plot(xArray[:,0], xArray[:,1], yArray, yhat)
 
+   
     fc1 = FullyConnectedLayer(din, dh1)
     fc2 = FullyConnectedLayer(dh1, dh2)
     fc3 = FullyConnectedLayer(dh2, dout)
 
-    xArray, yArray = dataGen(N, din)
+    
     T = 300
 
 
