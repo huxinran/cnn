@@ -35,7 +35,7 @@ class FullyConnectedLayer:
         '''
         init weight (with bias)
         '''
-        return np.random.normal(0, 1, [din + 1, dout])
+        return np.random.normal(0, 1 / np.sqrt(din), [din + 1, dout])
     
     @staticmethod   
     def predict(x, w):

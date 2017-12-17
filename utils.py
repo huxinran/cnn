@@ -1,5 +1,5 @@
 from PIL import Image
-
+import pickle
 import numpy as np
 import matplotlib.pyplot as plt 
 
@@ -38,20 +38,29 @@ def unpickle(file):
         dict = pickle.load(f, encoding='bytes')
     return dict
 
-def toImg(rawArray):
+def cifar():
+    f= './data/data_batch_1'
+    d = unpickle(f)
+    return np.array(d[b'data']), np.array(d[b'labels'])
+
+def mnist():
+    f = './data/mnist.pkl'
+    d = unpickle(f)
+    train, test, validata = d[0], d[1], d[2]
+    return train
+
+def toImg(rawArray, h, w, c):
     #print(rawArray.shape)
-    H, W = 32, 32
-    data = np.zeros((32, 32, 3), np.uint8)
+    data = np.zeros((h, w, c), np.uint8)
     t = 0
-    for c in range(3):
-        for i in range(32):
-            for j in range(32):
+    for c in range(c):
+        for i in range(h):
+            for j in range(w):
                 #print(rawArray[t], i, j,  c)
 
                 data[i][j][c] = rawArray[t]
                 t += 1
-
-    
+                
     return Image.fromarray(data, 'RGB')
 
     d = unpickle("./data/data_batch_1")
