@@ -13,71 +13,74 @@ class NeuralNet:
         for i in range(len(self.dim) - 1):
             self.layer.append(FullyConnectedLayer(self.dim[i], self.dim[i + 1]))
         
-        self.l  = len(self.layer)
-        self.w  = [l.w for l in self.layer]
-        
+        self.l    = len(self.layer)
+
+        self.w    = [l.generateWeight() for l in self.layer]
         
     def __repr__(self):
         return 'NeuralNet with {0.din} to {0.dhidden} to {0.dout}'.format(self)
 
-    def forward(self, _x, wArray):
-        xArray = [np.array(1)] * (self.l + 1)
-        xArray[0] = _x
-        for i in range(self.l):
-            xArray[i + 1] = self.layer[i].forward(xArray[i], wArray[i])
-            if i != self.l - 1:
-                xArray[i + 1] = np.maximum(0, xArray[i + 1])
-        return xArray
+    def forward(self, x0, w):
+        x = [None] * self.l
+        x[0] = x0
+        i = 0
+        while i < self.l - 1:
+            x[i + 1] = np.maximum(0, self.layer[i].forward(x[i], w[i]))
+            i += 1
+        p = self.layer[i].forward(x[i], w[i])
+        return x, p
 
-    def backward(self, xArray, wArray, _dy):
-        dwArray = [None] * self.l
-        dy = np.array(_dy)
+    def backward(self, x, w, dy):
+        dw = [None] * self.l
+
         for i in reversed(range(self.l)):
-            dx, dw = self.layer[i].backward(xArray[i], wArray[i], dy)            
-            dy = dx * (1 * (xArray[i] > 0))
-            dwArray[i] = dw
-            
-
-        return dwArray
+            dx, dw[i] = self.layer[i].backward(x[i], w[i], dy)      
+            dy  = dx * (1 * (x[i] > 0))
+        return dw
 
     def loss(self, s, y):
-        p = softmax(s).reshape(1, -1)
-        l = 10 if p[0][y] < 0.000001 else -np.log(p[0][y])
-        p[0][y] -= 1
-        return l, p
+        prob = softmax(s).reshape(1, -1)
+        THRESHOLD = -10
+        loss = -(THRESHOLD if prob[0][y] < np.exp(THRESHOLD) else np.log(prob[0][y]))
+        prob[0][y] -= 1
+        return loss, prob
 
-    def trainOnce(self, x, y, r):
-        dwArrayTotal = None
-        loss = 0
-        correct = 0
-        n = x.shape[0]
-        wArray = self.w
+    def train_iteration(self, x, y, r):
+        lossSum = 0
+        correctSum = 0
+        dwSum = None
+        N = x.shape[0]
 
-        for i in range(n):
-            xArray  = self.forward(x[i], wArray)
-            l, dy   = self.loss(xArray[-1], y[i])
-            loss += l
-            if y[i] == np.argmax(xArray[-1]):
-                correct += 1
-            dwArray = self.backward(xArray, wArray, dy)
+        for i in range(N):
+            xi = x[i]
+            yi = y[i]
+            self.x, self.p = self.forward(xi, self.w)
+            l, dy = self.loss(self.p, yi)
+            
+            lossSum += l
+            if yi == np.argmax(self.p):
+                correctSum += 1
+            
+            dw = self.backward(self.x, self.w, dy)
 
-            if dwArrayTotal is None:
-                dwArrayTotal = dwArray 
+            if dwSum is None:
+                dwSum = dw 
             else:
                 for j in range(self.l):
-                    dwArrayTotal[j] += dwArray[j]
+                    dwSum[j] += dw[j]
         
         for i in range(self.l):
-            self.w[i] -= (dwArrayTotal[i] / n) * r
+            self.w[i] -= (dwSum[i] / N) * r
 
-        return loss / n, correct / n
+        return lossSum / N, correctSum / N
 
     def train(self, x, y, iter, r):
         for t in range(iter):
-            l, correct_rate = self.trainOnce(x, y, r)
-            #s = 'Iter: {0:4d} | Loss: {1:2.2f} | CorrectRate: {2:2.2f} | StepSize:{3:2.2f}\r'.format(t, l, correct_rate, r)
-            #print('\r', end='')
-            #print(s, end='')
+            l, correct_rate = self.train_iteration(x, y, r)
+            s = 'Iter: {0:4d} | Loss: {1:2.2f} | CorrectRate: {2:2.2f} | StepSize:{3:2.2f}\r'.format(t, l, correct_rate, r)
+            print(s, end='')
+            print('\r', end='')
+        print('\n')
     
     def test(self, x):
         y = []
@@ -85,3 +88,4 @@ class NeuralNet:
             yhat = self.forward(x[i], self.w)
             y.append(np.argmax(yhat[-1]))
         return np.array(y)
+

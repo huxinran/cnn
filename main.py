@@ -9,13 +9,11 @@ import time
 
 
 def main():
-    print(1)
-
-    N = 300
+    N = 200
     din = 2
     dout = 4
-    dh1 = 128
-    dh2 = 128
+    dh1 = 100
+    dh2 = 100
     dhidden = [dh1, dh2]
     xArray, yArray = dataGen(N, din)
     r = 0.05
@@ -31,9 +29,9 @@ def main():
     n.train(xArray, yArray, T, r)
 
     end = time.time()
-    print(1)
     print(end - start)
-    #return
+    
+    return
     np.random.seed(42)
     start = time.time()
     fc1 = FullyConnectedLayer(din, dh1)
@@ -51,9 +49,9 @@ def main():
         dw2_total = np.zeros([dh1 + 1, dh2])
         dw3_total = np.zeros([dh2 + 1, dout])
 
-        w1 = fc1.w
-        w2 = fc2.w
-        w3 = fc3.w    
+        w1 = fc1.generateWeight()
+        w2 = fc2.generateWeight()
+        w3 = fc3.generateWeight()    
         loss = 0.0
         correct = 0
         c = np.zeros(N)
@@ -99,9 +97,9 @@ def main():
 
 
 
-        fc1.w -= dw1_total / N * r 
-        fc2.w -= dw2_total / N * r
-        fc3.w -= dw3_total / N * r
+        w1 -= dw1_total / N * r 
+        w2 -= dw2_total / N * r
+        w3 -= dw3_total / N * r
         
         #print('{0} {1} {2}               '.format(t, loss, correct),  end='')
         print('\r', end='')    
