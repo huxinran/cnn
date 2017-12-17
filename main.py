@@ -18,11 +18,11 @@ def main():
     data, label = dataGen(N, din)
     testData, testLabel = dataGen(N, din)
 
-    r = 0.01
-    T = 100
-
+    stepSize = 0.01
+    iteration = 100
+    regularization = 0.0001
     # magic happens here
-    n.train(data, label, r, T, testData=testData, testLabel=testLabel)
+    n.train(data, label, stepSize, iteration, regularization)
     #n.show()
     return
 

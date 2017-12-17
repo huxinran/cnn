@@ -5,6 +5,14 @@ from utils import plot
 import time
 
 class NeuralNet:
+    '''
+    Neural Net class consists of l fully connected layers that classify a din dimensional data into one of 
+    dout class labels
+
+    din  : dimension of data
+    dout : number of label class
+    dhidden : number of neurons in hidden layers  
+    '''
     def __init__(self, din, dout, dhidden):
         self.dim = []
         self.dim.append(din)
@@ -46,7 +54,7 @@ class NeuralNet:
         prob[0][y] -= 1
         return loss, prob
 
-    def train_iteration(self, data, label, rate):
+    def train_iteration(self, data, label, stepSize, regularization=0.0):
         
         N = data.shape[0]
 
@@ -71,28 +79,32 @@ class NeuralNet:
                     dwSum[j] += dw[j] 
 
         for i in range(self.l):
-            self.w[i] -= (dwSum[i] / N) * rate
+            g = (dwSum[i] / N) * stepSize + self.w[i] * regularization
+            self.w[i] -= g
 
         return np.array(loss), np.array(labelHat)
 
-    def train(self, trainData, trainLabel, rate, iter, testData=None, testLabel=None):
+    def train(self, trainData, trainLabel, stepSize, iter, regularization=0.0, testData=None, testLabel=None):
         start = time.time()
         for t in range(iter):
-            trainLoss, trainLabelHat = self.train_iteration(trainData, trainLabel, rate)
+            trainLoss, trainLabelHat = self.train_iteration(trainData, trainLabel, stepSize, regularization)
             trainLoss = np.mean(trainLoss)
             trainErrRate = np.mean(1 * (trainLabelHat != trainLabel))
-            testLabelHat = self.predict(testData) 
-            testErrRate = np.mean(1 * (testLabelHat != testLabel))
-            
-            
-            
+
+   
             now = time.time()
             timeRemain = (now - start) / (t + 1) * (iter - t - 1)
-
-            s = 'Iter: {0:4d} | Loss: {1:2.2f} | Train ErrRate: {2:2.2f} | Test ErrRate:{3:2.2f} | Time Remain:{4:2.2f}'.format(t, trainLoss, trainErrRate, testErrRate, timeRemain)
+            
+            if testData is not None:
+                testLabelHat = self.predict(testData) 
+                testErrRate = np.mean(1 * (testLabelHat != testLabel))
+                s = 'Iter: {0:4d} | Loss: {1:2.2f} | Train ErrRate: {2:2.2f} | Test ErrRate:{3:2.2f} | Time Remain:{4:2.2f}'.format(t, trainLoss, trainErrRate, testErrRate, timeRemain)
+            else:
+                s = 'Iter: {0:4d} | Loss: {1:2.2f} | Train ErrRate: {2:2.2f} | Test ErrRate:N/A | Time Remain:{3:2.2f}'.format(t, trainLoss, trainLoss, timeRemain)
+            
             print(s, end='')
             print('\r', end='')
-
+            
         print('\nTime total : {0}'.format(time.time() - start))
         #print('\n')
         #plot(trainData[:,0], trainData[:,1], trainLabel, trainLabelHat)
