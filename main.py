@@ -1,29 +1,34 @@
 import numpy as np
 import matplotlib.pyplot as plt 
-from layer import FullyConnectedLayer 
+from layer import FullyConnectedLayer as FC
 from network import NeuralNet
 from utils import dataGen
 from utils import plot
 from utils import softmax
-
+from time import time
 
 
 def main():
-    N = 100
+    N = 200
     din = 2
-    dhidden = [100, 100]
+    dh1 = 100 
+    dh2 = 100
     dout = 5
-    n = NeuralNet(din, dout, dhidden)    
+    seed = 43
+
+    np.random.seed(seed)
+    
+    n = NeuralNet([din, dh1, dh2, dout])    
    
     data, label = dataGen(N, din)
-    testData, testLabel = dataGen(N, din)
-
+    
     stepSize = 0.01
-    iteration = 100
-    regularization = 0.0001
-    # magic happens here
-    n.train(data, label, stepSize, iteration, regularization)
-    #n.show()
+    iteration = 200
+    regularization = 0.0
+    debug = False
+
+    n.train(data, label, iteration, stepSize, regularization, debug=debug)
+    n.show()
     return
 
 if __name__ == "__main__":

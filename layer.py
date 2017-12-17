@@ -4,23 +4,24 @@ class FullyConnectedLayer:
     '''
     Fully Connected Layer Class
     
-    (1) convert an input matrix, x into an output matrix, y
-    (2) stores weights as well as corresponding temporary variables
+    represents a function f(x, w) = y
+    convert an input matrix, x into an output matrix, y
 
-    List of Instance Variables 
+
+    List of Variable  
     ============================================================================
-    |name | type             | detail                                          |
+    | Name | Type             | Explanation                                    |
     ============================================================================
-    |din  | int              | input dimension                                 |
-    |dout | int              | output dimension                                |
+    | din  | int              | dimension of input                             |
+    | dout | int              | dimension of output                            |
     ----------------------------------------------------------------------------
-    |x    | (1, din)         | input                                           |
-    |w    | (din + 1 , dout) | weight                                          |
-    |y    | (1 , dout)       | output                                          |
+    | x    | (N, din)         | input variable                                 |
+    | w    | (din + 1 , dout) | weight (+1 due to bias)                        |
+    | y    | (N , dout)       | output variable y = x * w                      |
     |---------------------------------------------------------------------------        
-    |dx   | (1 , din)        | input gradient                                  |
-    |dw   | (din + 1 , dout) | weight gradient                                 |
-    |dy   | (1 , dout)       | output gradient                                 |
+    | dy   | (N , dout)       | gradient on output                             |
+    | dx   | (N , din)        | gradient on input   dx = dy * dw[1:,]          |
+    | dw   | (din + 1 , dout) | gradient on weight  dw = t([1, dx]) * dy       |
     ============================================================================
 
     List of Instance Method
@@ -31,20 +32,14 @@ class FullyConnectedLayer:
     |backward | (x, w, dy) => (dx, dw) | back prop                             |
     ============================================================================
     '''
-    def __init__(self, din, dout):
-        self.din = din
-        self.dout = dout
 
-    def __repr__(self):
-        return 'Fully Connected Layer from {0.din} to {0.dout}'.format(self)
-
-    def generateWeight(self):
-        return np.random.normal(0, 10, [self.din + 1, self.dout])
+    def initWeight(din, dout):
+        return np.random.normal(0, 1, [din + 1, dout])
         
-    def forward(self, x, w):
-        return np.dot(np.append(1, x).reshape(1, -1), w)
+    def predict(x, w):
+        return np.dot(np.c_[np.ones(x.shape[0]), x], w)
         
-    def backward(self, x, w, dy):
+    def gradient(dy, x, w):
         dx = np.dot(dy, w[1:,].T)
-        dw = np.dot(np.append(1, x).reshape(1, -1).T, dy)
+        dw = np.dot(np.r_[np.ones([1, dy.shape[0]]), x.T], dy)
         return dx, dw
