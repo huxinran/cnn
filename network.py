@@ -1,6 +1,7 @@
 import numpy as np
 from layer import FullyConnectedLayer
 from utils import softmax
+from utils import plot
 
 class NeuralNet:
     def __init__(self, din, dout, dhidden):
@@ -45,46 +46,55 @@ class NeuralNet:
         prob[0][y] -= 1
         return loss, prob
 
-    def train_iteration(self, x, y, r):
-        lossSum = 0
-        correctSum = 0
+    def train_iteration(self, data, label, rate):
+        
+        N = data.shape[0]
+
+        loss     = [0] * N
+        labelHat = [0] * N
         dwSum = None
-        N = x.shape[0]
-        w = self.w    
+        w = self.w
+
         for i in range(N):
-            xi = x[i]
-            yi = y[i]
-            _x, _s = self.forward(xi, w)
-            l, dy = self.loss(_s, yi)
+            di = data[i]
+            li = label[i]
+            x, s = self.forward(di, w)
             
-            lossSum += l
-            if yi == np.argmax(_s):
-                correctSum += 1
+            loss[i], dy = self.loss(s, li)
+            labelHat[i] = np.argmax(s)
             
-            dw = self.backward(_x, w, dy)
+            dw = self.backward(x, w, dy)
             if dwSum is None:
                 dwSum = dw
             else:
-                for j in range(self.l)
+                for j in range(self.l):
                     dwSum[j] += dw[j] 
 
         for i in range(self.l):
-            self.w[i] -= (dwSum[i] / N) * r
+            self.w[i] -= (dwSum[i] / N) * rate
 
-        return lossSum / N, correctSum / N
+        return np.array(loss), np.array(labelHat)
 
-    def train(self, x, y, iter, r):
+    def train(self, trainData, trainLabel, rate, iter, testData=None, testLabel=None):
         for t in range(iter):
-            l, correct_rate = self.train_iteration(x, y, r)
-            s = 'Iter: {0:4d} | Loss: {1:2.2f} | CorrectRate: {2:2.2f} | StepSize:{3:2.2f}\r'.format(t, l, correct_rate, r)
+            trainLoss, trainLabelHat = self.train_iteration(trainData, trainLabel, rate)
+            trainLoss = np.mean(trainLoss)
+            trainErrRate = np.mean(1 * (trainLabelHat != trainLabel))
+            testLabelHat = self.predict(testData) 
+            testErrRate = np.mean(1 * (testLabelHat != testLabel))
+            s = 'Iter: {0:4d} | Loss: {1:2.2f} | Train ErrRate: {2:2.2f} | Test ErrRate:{3:2.2f}\r'.format(t, trainLoss, trainErrRate, testErrRate)
             print(s, end='')
             print('\r', end='')
         print('\n')
-    
-    def test(self, x):
-        y = []
-        for i in range(x.shape[0]):
-            yhat = self.forward(x[i], self.w)
-            y.append(np.argmax(yhat[-1]))
-        return np.array(y)
+        plot(trainData[:,0], trainData[:,1], trainLabel, trainLabelHat)
+        plot(testData[:,0], testData[:,1], testLabel, testLabelHat)
+        
+    def predict(self, data):
+        N = data.shape[0]
+        label = [0] * N
+        for i in range(N):
+            di = data[i]
+            _, s = self.forward(di, self.w)
+            label[i] = np.argmax(s)
+        return np.array(label)
 
