@@ -50,25 +50,24 @@ class NeuralNet:
         correctSum = 0
         dwSum = None
         N = x.shape[0]
-
+        w = self.w    
         for i in range(N):
             xi = x[i]
             yi = y[i]
-            self.x, self.p = self.forward(xi, self.w)
-            l, dy = self.loss(self.p, yi)
+            _x, _s = self.forward(xi, w)
+            l, dy = self.loss(_s, yi)
             
             lossSum += l
-            if yi == np.argmax(self.p):
+            if yi == np.argmax(_s):
                 correctSum += 1
             
-            dw = self.backward(self.x, self.w, dy)
-
+            dw = self.backward(_x, w, dy)
             if dwSum is None:
-                dwSum = dw 
+                dwSum = dw
             else:
-                for j in range(self.l):
-                    dwSum[j] += dw[j]
-        
+                for j in range(self.l)
+                    dwSum[j] += dw[j] 
+
         for i in range(self.l):
             self.w[i] -= (dwSum[i] / N) * r
 
