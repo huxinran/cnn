@@ -34,22 +34,10 @@ class FullyConnectedLayer:
     def __init__(self, din, dout):
         self.din = din
         self.dout = dout
-        
-        self.x = np.zeros([1, din])
-        self.w = np.zeros([din + 1, dout])
-        self.y = np.zeros([1, dout])
-
-        self.dx = np.zeros([1, din])
-        self.dw = np.zeros([din + 1, dout])
-        self.dy = np.zeros([1, dout])
-
         self.w = np.random.normal(0, 1, [din + 1, dout])
 
     def __repr__(self):
         return 'Fully Connected Layer of shape {0.din} to {0.dout}'.format(self)
-
-    def initWeight(self):
-        return np.random.normal(0, 1, [self.din + 1, self.dout])
 
     def forward(self, x, w):
         return np.dot(np.append(1, x).reshape(1, -1), w)
