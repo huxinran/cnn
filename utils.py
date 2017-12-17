@@ -12,24 +12,23 @@ def dataGen(n, d):
     x = np.random.normal(0, 1, [n, d])
     y = 1 * np.logical_or(np.logical_and(x[:, 0] > 0, x[:, 1] > 0), np.logical_and(x[:, 0] < 0, x[:, 1] < 0)) 
     for i in range(n):
-        if np.sum(np.square(x[i])) > 3.0:
-            y[i] = 4
-        elif np.sum(np.square(x[i])) > 2.0:
+        if np.sum(np.square(x[i])) > 2.0:
             y[i] = 2
         elif np.sum(np.square(x[i])) < 1.0:
             y[i] = 3
+     
     return x, y
 
 def plot(x, y, label1, label2 = None):
-    color = np.array(['r', 'b', 'g', 'k', 'y'])
+    color = np.array(['r', 'b', 'g', 'k', 'y', 'c'])
     
     plt.subplot(1, 2, 1)
-    for i in range(5):
+    for i in range(6):
         plt.plot(x[label1==i], y[label1==i], c=color[i], marker='o', markersize=2, linestyle='none')
 
     if label2 is not None:
         plt.subplot(1, 2, 2)
-        for i in range(5):
+        for i in range(6):
             plt.plot(x[label2==i], y[label2==i], c=color[i], marker='o', markersize=2, linestyle='none')
 
     plt.show()

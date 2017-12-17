@@ -6,99 +6,130 @@ import time
 
 class NeuralNet:
     '''
-    Neural Net class consists of l fully connected layers that classify a din dimensional data into one of 
-    dout class labels
+    Neural Net class consists of k fully connected layers which takes an 
+    array of data of size [din] and classify them into [dout] labels
 
-    dim  : dimension of data flow  [din, dh1, dh2, ..., dhk, dout]
     '''
     def __init__(self, dim):    
+        '''
+        dim  : an array of dimensions
+        [din,       dh1, dh2, ..., dhk, dout]
+         input -> | hidden layers    | -> output
+        '''
         self.dim = dim
         self.l = len(self.dim) - 1
-        self.w = [None] * self.l
-        for i in range(self.l):
-            self.w[i] = FC.initWeight(self.dim[i], self.dim[i + 1])
         
+        self.w = [] 
+
+        for i in range(self.l):
+            self.w.append(FC.initWeight(self.dim[i], self.dim[i + 1]))
         
     def __repr__(self):
         return 'NeuralNet with {0.din} to {0.dhidden} to {0.dout}'.format(self)
 
-    def predict(self, xInput):
-        xHidden = [None] * self.l
-        xHidden[0] = xInput
+    def predict(self, data):
+        """
+        given a input data, 
+        return an output value and a list of data for each of the hidden layers
+        """
+        inputHidden = [None] * self.l
+        inputHidden[0] = data
         
         for i in range(self.l - 1):
-            xHidden[i + 1] = np.maximum(0, FC.predict(xHidden[i], self.w[i]))
+            inputHidden[i + 1] = np.maximum(0, FC.predict(inputHidden[i], self.w[i]))
         
-        y = FC.predict(xHidden[-1], self.w[-1])
-        return y, xHidden
+        output = FC.predict(inputHidden[-1], self.w[-1])
+        return output, inputHidden
 
-    def gradient(self, dy, xHidden):
+    def computeLoss(self, output, label):
+        """
+        given the output and true label, 
+        return softmax cross entropy loss and gradient on output
+        """
+        prob = softmax(output)
+        rIdx = np.arange(label.shape[0])
+        loss = -np.log(np.maximum(np.exp(-10), prob[rIdx, label]))
+        dOutput = prob
+        dOutput[rIdx, label] -= 1
+        return loss, dOutput
+
+    def gradient(self, dOutput, inputHidden):
+        """
+        given the graident on output and data for hidden layer
+        computer the gradient for hidden layer weights
+        """
         dwHidden = [None] * self.l
-
         for i in reversed(range(self.l)):
-            dy, dwHidden[i] = FC.gradient(dy, xHidden[i], self.w[i])      
-            dy = dy * (1 * (xHidden[i] > 0))
+            dOutput, dwHidden[i] = FC.gradient(dOutput, inputHidden[i], self.w[i])      
+            dOutput = dOutput * (1 * (inputHidden[i] > 0))
 
+        # normalized the gradient by number of observations
         for dw in dwHidden:
-            dw /= dy.shape[0]
+            dw /= dOutput.shape[0]
 
         return dwHidden
 
-    def applyGraident(self, gradient, stepSize=0.001, regularization=0):
+    def applyGraident(self, dw, stepSize=0.001, regularization=0):
+        """
+        given gradient, apply gradient on weight with stepsize adjustment and 
+        regularization
+        """
         for i in range(self.l):
-            self.w[i] -= (gradient[i] * stepSize + self.w[i] * regularization)
+            self.w[i] -= (dw[i] * stepSize + self.w[i] * regularization)
 
-    def calcLoss(self, y, label):
-        p = softmax(y)
-        r = np.arange(y.shape[0])
-        loss = -np.log(np.maximum(np.exp(-10), p[r, label]))
-        p[r, label] -= 1
-        return loss, p
+
 
     def trainIteration(self, data, label, debug=False):
+        """
+        one iteration of learning
+        """
         # forawrd feed, get y and x_hidden
-        y, xHidden = self.predict(data)
+        output, inputHidden = self.predict(data)
         
         # measure loss and gradient on y
-        loss, dy = self.calcLoss(y, label)
+        loss, dOutput = self.computeLoss(output, label)
         
         # backprop, get gradient on weight
-        dw = self.gradient(dy, xHidden)
+        dwHidden = self.gradient(dOutput, inputHidden)
         
         if debug:
-            print("data=", data)
-            print("log=", label)
-            print('w=', self.w)
-            print("xhidden=", xHidden)
-            print("y=", y)
-            print("loss=", loss)
-            print("dy=", dy)
-            print("dw=", dw)
+            print('w = ', self.w)
+            print("xhidden = ", inputHidden)
+            print("y = ", output)
+            print("dy = ", dOutput)
+            print("dw = ", dwHidden)
 
-        return y, loss, dw
+        return output, loss, dwHidden
 
     def train(self, data, label, iteration, stepSize=0.001, regularization=0.0, testPct=0.0, debug=False):
         start = time.time()
         
         for t in range(iteration):
-            y, loss, dw = self.trainIteration(data, label, debug)
 
+            # computer gradient on weight
+            output, loss, dw = self.trainIteration(data, label, debug)
+            
+            # apply gradient on weight
             self.applyGraident(dw, stepSize, regularization)
 
+            # all book keeping
             avgLoss = np.mean(loss)
 
-            errRate = np.mean(1 * (np.argmax(y, axis=1) != label))
+            errRate = np.mean(1 * (np.argmax(output, axis=1) != label))
 
             timeRemain = (time.time() - start) / (t + 1) * (iteration - t - 1)
             
             debugStr = 'Iter: {0:4d} | Loss: {1:4.4f} | Train ErrRate: {2:4.4f} | Time Remain:{3:4.4f}'.format(t, avgLoss, errRate, timeRemain)
-            print(debugStr, end='')
-            print('\r', end='')
             
-        print('\nTime total : {0}'.format(time.time() - start))
+            print(debugStr, end='\r')
+            
+        print('\n\nTime total : {0}'.format(time.time() - start))
 
 
     def show(self):
+        """
+        visualized the decision bountary
+        """
         x = np.linspace(-4, 4, 128)
         y = np.linspace(-4, 4, 128)
         data = []
