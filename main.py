@@ -5,25 +5,25 @@ from network import NeuralNet
 from utils import dataGen
 from utils import plot
 from utils import softmax
-import time
+
 
 
 def main():
-    N = 200
+    N = 100
     din = 2
-    dhidden = [200, 200]
-    dout = 4
+    dhidden = [100, 100]
+    dout = 5
     n = NeuralNet(din, dout, dhidden)    
    
-    trainData, trainLabel = dataGen(N, din)
+    data, label = dataGen(N, din)
     testData, testLabel = dataGen(N, din)
 
     r = 0.01
-    T = 150
+    T = 100
 
     # magic happens here
-    n.train(trainData, trainLabel, r, T, testData=testData, testLabel=testLabel)
-    
+    n.train(data, label, r, T, testData=testData, testLabel=testLabel)
+    #n.show()
     return
 
 if __name__ == "__main__":

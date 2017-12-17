@@ -39,7 +39,7 @@ class FullyConnectedLayer:
         return 'Fully Connected Layer from {0.din} to {0.dout}'.format(self)
 
     def generateWeight(self):
-        return np.random.normal(0, 1, [self.din + 1, self.dout])
+        return np.random.normal(0, 10, [self.din + 1, self.dout])
         
     def forward(self, x, w):
         return np.dot(np.append(1, x).reshape(1, -1), w)

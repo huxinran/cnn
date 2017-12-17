@@ -2,6 +2,7 @@ import numpy as np
 from layer import FullyConnectedLayer
 from utils import softmax
 from utils import plot
+import time
 
 class NeuralNet:
     def __init__(self, din, dout, dhidden):
@@ -14,9 +15,8 @@ class NeuralNet:
         for i in range(len(self.dim) - 1):
             self.layer.append(FullyConnectedLayer(self.dim[i], self.dim[i + 1]))
         
-        self.l    = len(self.layer)
-
-        self.w    = [l.generateWeight() for l in self.layer]
+        self.l = len(self.layer)
+        self.w = [l.generateWeight() for l in self.layer]
         
     def __repr__(self):
         return 'NeuralNet with {0.din} to {0.dhidden} to {0.dout}'.format(self)
@@ -76,19 +76,28 @@ class NeuralNet:
         return np.array(loss), np.array(labelHat)
 
     def train(self, trainData, trainLabel, rate, iter, testData=None, testLabel=None):
+        start = time.time()
         for t in range(iter):
             trainLoss, trainLabelHat = self.train_iteration(trainData, trainLabel, rate)
             trainLoss = np.mean(trainLoss)
             trainErrRate = np.mean(1 * (trainLabelHat != trainLabel))
             testLabelHat = self.predict(testData) 
             testErrRate = np.mean(1 * (testLabelHat != testLabel))
-            s = 'Iter: {0:4d} | Loss: {1:2.2f} | Train ErrRate: {2:2.2f} | Test ErrRate:{3:2.2f}\r'.format(t, trainLoss, trainErrRate, testErrRate)
+            
+            
+            
+            now = time.time()
+            timeRemain = (now - start) / (t + 1) * (iter - t - 1)
+
+            s = 'Iter: {0:4d} | Loss: {1:2.2f} | Train ErrRate: {2:2.2f} | Test ErrRate:{3:2.2f} | Time Remain:{4:2.2f}'.format(t, trainLoss, trainErrRate, testErrRate, timeRemain)
             print(s, end='')
             print('\r', end='')
-        print('\n')
-        plot(trainData[:,0], trainData[:,1], trainLabel, trainLabelHat)
-        plot(testData[:,0], testData[:,1], testLabel, testLabelHat)
-        
+
+        print('\nTime total : {0}'.format(time.time() - start))
+        #print('\n')
+        #plot(trainData[:,0], trainData[:,1], trainLabel, trainLabelHat)
+        #plot(testData[:,0], testData[:,1], testLabel, testLabelHat)
+
     def predict(self, data):
         N = data.shape[0]
         label = [0] * N
@@ -98,3 +107,15 @@ class NeuralNet:
             label[i] = np.argmax(s)
         return np.array(label)
 
+
+    def show(self):
+        x = np.linspace(-4, 4, 128)
+        y = np.linspace(-4, 4, 128)
+        data = []
+        for xi in x:
+            for yi in y:
+                data.append([xi, yi])
+        
+        data = np.array(data)
+        l = self.predict(data)
+        plot(data[:,0], data[:,1], l)
