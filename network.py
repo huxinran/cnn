@@ -101,25 +101,42 @@ class NeuralNet:
 
         return output, loss, dwHidden
 
+    def trainTestSplit(self, data, label, testPct=0.0):
+        
+        N = data.shape[0]
+        indices = np.random.permutation(N)
+        trainSize = np.ceil(N * (1 - testPct)).astype(int)
+
+        testSize = N - trainSize
+        trainIdx = indices[1:trainSize]
+        testIdx = indices[trainSize:]
+
+        return data[trainIdx,], label[trainIdx,], data[testIdx,], label[testIdx,]
+
     def train(self, data, label, iteration, stepSize=0.001, regularization=0.0, testPct=0.0, debug=False):
         start = time.time()
         
+        dTrain, lTrain, dTest, lTest = self.trainTestSplit(data, label, testPct)
+
         for t in range(iteration):
 
             # computer gradient on weight
-            output, loss, dw = self.trainIteration(data, label, debug)
+            outputTrain, lossTrain, dw = self.trainIteration(dTrain, lTrain, debug)
             
             # apply gradient on weight
             self.applyGraident(dw, stepSize, regularization)
 
             # all book keeping
-            avgLoss = np.mean(loss)
+            outputTest, _ = self.predict(dTest)
 
-            errRate = np.mean(1 * (np.argmax(output, axis=1) != label))
+            avgLossTrain = np.mean(lossTrain)
+
+            errRateTrain = np.mean(1 * (np.argmax(outputTrain, axis=1) != lTrain))
+            errRateTest  = np.mean(1 * (np.argmax(outputTest, axis=1) != lTest))
 
             timeRemain = (time.time() - start) / (t + 1) * (iteration - t - 1)
             
-            debugStr = 'Iter: {0:4d} | Loss: {1:4.4f} | Train ErrRate: {2:4.4f} | Time Remain:{3:4.4f}'.format(t, avgLoss, errRate, timeRemain)
+            debugStr = 'Iter:{0:4d}|Time:{1:4.4f}|TrainErr:{2:4.4f}|Test Err:{3:4.4f}|Loss:{4:4.4f}'.format(t, timeRemain, errRateTrain,errRateTest,avgLossTrain)
             
             print(debugStr, end='\r')
             

@@ -9,10 +9,10 @@ from time import time
 
 
 def main():
-    N = 1000
+    N = 200
     din = 2
-    dh1 = 40 
-    dh2 = 40
+    dh1 = 100
+    dh2 = 100
     dout = 4
     seed = 42
     np.random.seed(seed)
@@ -24,7 +24,7 @@ def main():
     regularization = 0.0
     debug = False
 
-    n.train(data, label, iteration, stepSize, regularization, debug=debug)
+    n.train(data, label, iteration, stepSize, regularization, debug=debug, testPct=0.2)
     n.show()
     return
 
