@@ -1,5 +1,0 @@
-class Gate:
-
-
-
-class AddGate
