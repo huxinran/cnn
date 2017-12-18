@@ -120,13 +120,14 @@ class NeuralNet:
 
 
     def train(self, data, label, iteration, stepSize=0.001, regularization=0.0, testPct=0.0, debug=False):
-        sampleSize = 5
+        sampleSize = 10
+        sampleIndex = np.random.choice(100, sampleSize, replace=False)
         start = time.time()
         
         for i in range(sampleSize):
             plt.subplot(sampleSize, 2, i * 2 + 1)
-            plt.imshow(data[i,:].reshape(28,28), cmap='gray')
-            plt.pause(0.01)
+            plt.imshow(data[sampleIndex[i],:].reshape(28,28), cmap='gray')
+            plt.pause(0.001)
 
 
         data = self.normalize(data)
@@ -143,26 +144,10 @@ class NeuralNet:
             # all book keeping
             outputTest, _ = self.predict(dTest)
 
-
-            #==========================
-
-            #plt.show()
-    
-            # Plot
-            #plt.subplot(1, 2, 2)
-            #plt.bar(np.arange(10), np.random.random(10))
-            #plt.show()
-
-
-
-
-            #=====================
             avgLossTrain = np.mean(lossTrain)
 
             errRateTrain = np.mean(1 * (np.argmax(outputTrain, axis=1) != lTrain))
             errRateTest  = np.mean(1 * (np.argmax(outputTest, axis=1) != lTest))
-
-
 
             timeRemain = (time.time() - start) / (t + 1) * (iteration - t - 1)
             debugStr = 'Iter:{0:4d}|Time:{1:4.4f}|TrainErr:{2:4.4f}|Test Err:{3:4.4f}|Loss:{4:4.4f}'.format(t, timeRemain, errRateTrain,errRateTest,avgLossTrain)
@@ -172,9 +157,9 @@ class NeuralNet:
             for i in range(sampleSize):
                 plt.subplot(sampleSize, 2, i * 2 + 2)
                 plt.cla()
-                plt.bar(np.arange(10), prob[i,:])
+                plt.bar(np.arange(10), prob[sampleIndex[i],:])
                 plt.ylim(-0.2, 1.2)
-                plt.pause(0.01)
+                plt.pause(0.001)
             
         print('\n\nTime total : {0}'.format(time.time() - start))
 
