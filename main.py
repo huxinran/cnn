@@ -21,6 +21,7 @@ def main():
     n = NeuralNet([din, dhidden, dout])   
 
     stepSize = 0.1
+
     iteration = 1000
     regularization = 0.0
     debug = False
