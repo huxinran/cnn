@@ -11,11 +11,11 @@ from time import time
 
 def main():
 
-    (data, label) = mnist()
+    (data, label) = dataGen(200, 2)
     data = np.array(data)
     label = np.array(label)
     din = data[0].size
-    dhidden = 100
+    dhidden = 128
     dout = np.unique(label).size
     stepSize = 1
     iteration = 1000
@@ -26,7 +26,7 @@ def main():
     
     # magic happens
     net.train(data, label, iteration, stepSize, regularization, debug=debug, testPct=0.001)
-    
+    net.show()
     return
 
 if __name__ == "__main__":

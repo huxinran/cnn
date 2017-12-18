@@ -30,7 +30,8 @@ def plot(x, y, label1, label2 = None):
         for i in range(6):
             plt.plot(x[label2==i], y[label2==i], c=color[i], marker='o', markersize=2, linestyle='none')
 
-    plt.show()
+    plt.pause(10)
+
 
 def unpickle(file):
     with open(file, 'rb') as f:

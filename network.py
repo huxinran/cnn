@@ -120,14 +120,7 @@ class NeuralNet:
 
 
     def train(self, data, label, iteration, stepSize=0.001, regularization=0.0, testPct=0.0, debug=False):
-        sampleSize = 10
-        sampleIndex = np.random.choice(100, sampleSize, replace=False)
         start = time.time()
-        
-        for i in range(sampleSize):
-            plt.subplot(sampleSize, 2, i * 2 + 1)
-            plt.imshow(data[sampleIndex[i],:].reshape(28,28), cmap='gray')
-            plt.pause(0.001)
 
 
         data = self.normalize(data)
@@ -153,13 +146,6 @@ class NeuralNet:
             debugStr = 'Iter:{0:4d}|Time:{1:4.4f}|TrainErr:{2:4.4f}|Test Err:{3:4.4f}|Loss:{4:4.4f}'.format(t, timeRemain, errRateTrain,errRateTest,avgLossTrain)
             print(debugStr, end='\r')
             
-            prob = softmax(outputTrain)
-            for i in range(sampleSize):
-                plt.subplot(sampleSize, 2, i * 2 + 2)
-                plt.cla()
-                plt.bar(np.arange(10), prob[sampleIndex[i],:])
-                plt.ylim(-0.2, 1.2)
-                plt.pause(0.001)
             
         print('\n\nTime total : {0}'.format(time.time() - start))
 
