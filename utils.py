@@ -60,7 +60,6 @@ def toImg(rawArray, h, w, c):
                 data[i][j][c] = rawArray[t]
                 t += 1
                 
-    return Image.fromarray(data, 'RGB')
 
     d = unpickle("./data/data_batch_1")
     
