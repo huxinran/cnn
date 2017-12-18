@@ -11,18 +11,18 @@ class FullyConnectedLayer:
 
     List of Variable
     ============================================================================
-    | Name | Type             | Explanation                                    |
+      Name | Type             | Explanation                                    
     ============================================================================
-    | din  | int              | dimension of input                             |
-    | dout | int              | dimension of output                            |
+      din  | int              | dimension of input                             
+      dout | int              | dimension of output                            
+    ---------------------------------------------------------------------------
+      x    | (N, din)         | input                                 
+      w    | (din + 1 , dout) | weight (+1 due to bias)                        
+      y    | (N , dout)       | output                   
     ----------------------------------------------------------------------------
-    | x    | (N, din)         | input variable                                 |
-    | w    | (din + 1 , dout) | weight (+1 due to bias)                        |
-    | y    | (N , dout)       | output variable y = x * w                      |
-    |--------------------------------------------------------------------------|
-    | d_y  | (N , dout)       | gradient on output                             |
-    | d_x  | (N , din)        | gradient on input   d_x = d_y * d_w[1:,]       |
-    | d_w  | (din + 1 , dout) | gradient on weight  d_w = t([1, d_x]) * d_y    |
+      d_y  | (N , dout)       | gradient on output                             
+      d_x  | (N , din)        | gradient on input                              
+      d_w  | (din + 1 , dout) | gradient on weight                             
     ============================================================================
     '''
     @staticmethod
@@ -42,8 +42,8 @@ class FullyConnectedLayer:
     @staticmethod
     def bwd(d_y, x, w):
         '''
-        dx = dy * w
-        dw = dx.T * dy
+        d_x = d_y * w
+        d_w = d_x.T * d_y
         '''
         d_x = np.dot(d_y, w[1:,].T)
         d_w = np.dot(np.r_[np.ones([1, d_y.shape[0]]), x.T], d_y)
