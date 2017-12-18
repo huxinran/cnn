@@ -1,4 +1,3 @@
-from PIL import Image
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt 
@@ -61,7 +60,7 @@ def toImg(rawArray, h, w, c):
                 data[i][j][c] = rawArray[t]
                 t += 1
                 
-    return Image.fromarray(data, 'RGB')
+    #return Image.fromarray(data, 'RGB')
 
     d = unpickle("./data/data_batch_1")
     

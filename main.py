@@ -18,22 +18,15 @@ def main():
 
 
     (data, label) = mnist()
-
-
     data = np.array(data)
     label = np.array(label)
-
-    data = data - np.mean(data, axis=0)
-
-
     din = data.shape[1]
     dh1 = 100
-    dh2 = 100
     dout = 10
     seed = 42
     np.random.seed(seed)
     
-    n = NeuralNet([din, 128, dout])   
+    n = NeuralNet([din, dh1, dout])   
 
     stepSize = 1.0
     iteration = 1000
