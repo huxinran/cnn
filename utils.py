@@ -6,6 +6,20 @@ def softmax(y):
     p = np.exp(y - np.amax(y, axis=1).reshape(-1, 1))
     return p / np.sum(p, axis=1).reshape(-1, 1) 
 
+def train_test_split(data, label, test_pct=0.0):
+    """
+    split data, label into train and test set
+    """
+    N = data.shape[0]
+    train_size = np.ceil(N * (1 - test_pct)).astype(int)
+    return data[0:train_size, :], label[0:train_size], data[train_size:, :], label[train_size:]
+
+def normalize(data):
+    """
+    normalize data
+    """
+    data = data - np.mean(data, axis=0)
+    return data
 
 def data_gen(n, d):
     x = np.random.normal(0, 1, [n, d])
@@ -48,30 +62,16 @@ def mnist():
     train, test, validata = d[0], d[1], d[2]
     return train
 
-def toImg(rawArray, h, w, c):
-    #print(rawArray.shape)
-    data = np.zeros((h, w, c), np.uint8)
-    t = 0
-    for c in range(c):
-        for i in range(h):
-            for j in range(w):
-                #print(rawArray[t], i, j,  c)
-
-                data[i][j][c] = rawArray[t]
-                t += 1
-                
-
+def to_img(rawArray, h, w, c):            
     d = unpickle("./data/data_batch_1")
     
     for k in d.keys():
         d[k.decode()] = d.pop(k)
     
     for i in range(10000):
-        img = toImg(d['data'][i])
+        img = to_img(d['data'][i])
         img.show()
-
         input('next') 
-
 
 
 def debug():

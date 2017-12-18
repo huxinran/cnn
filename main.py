@@ -1,15 +1,17 @@
+"""
+main
+"""
 import numpy as np
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
+from network import NeuralNet
+from utils import mnist
 plt.ion()
 
-from network import NeuralNet
-from utils import data_gen
-from utils import softmax
-from utils import mnist
-
-from time import time
 
 def main():
+    """
+    main func
+    """
 
     (data, label) = mnist()
     data = np.array(data)
@@ -21,12 +23,9 @@ def main():
     iteration = 1000
     regularization = 0.0
     debug = False
-    
-    net = NeuralNet([din, dhidden, dout])   
-    
+    net = NeuralNet([din, dhidden, dout])
     # magic happens
     net.fit(data, label, iteration, step_size, regularization, debug=debug, test_pct=0.001)
-    
     return
 
 if __name__ == "__main__":
