@@ -167,13 +167,6 @@ class NeuralNet:
             timeRemain = (time.time() - start) / (t + 1) * (iteration - t - 1)
             debugStr = 'Iter:{0:4d}|Time:{1:4.4f}|TrainErr:{2:4.4f}|Test Err:{3:4.4f}|Loss:{4:4.4f}'.format(t, timeRemain, errRateTrain,errRateTest,avgLossTrain)
             print(debugStr, end='\r')
-
-            prob = softmax(outputTrain[idx,:].reshape(1, 10))
-            
-            plt.subplot(1, 2, 2)
-            plt.cla()
-            plt.bar(np.arange(10), prob[0])
-            plt.pause(0.5)
             
             prob = softmax(outputTrain)
             for i in range(sampleSize):
