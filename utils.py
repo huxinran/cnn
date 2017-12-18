@@ -7,7 +7,7 @@ def softmax(y):
     return p / np.sum(p, axis=1).reshape(-1, 1) 
 
 
-def dataGen(n, d):
+def data_gen(n, d):
     x = np.random.normal(0, 1, [n, d])
     y = 1 * np.logical_or(np.logical_and(x[:, 0] > 0, x[:, 1] > 0), np.logical_and(x[:, 0] < 0, x[:, 1] < 0)) 
     for i in range(n):

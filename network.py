@@ -23,158 +23,114 @@ class NeuralNet:
         self.w = [] 
 
         for i in range(self.l):
-            self.w.append(FC.initWeight(self.dim[i], self.dim[i + 1]))
+            self.w.append(FC.init_weight(self.dim[i], self.dim[i + 1]))
         
     def __repr__(self):
         return 'NeuralNet with {0.din} to {0.dhidden} to {0.dout}'.format(self)
 
-    def predict(self, data):
+    def compute_output(self, input_):
         """
         given a input data, 
         return an output value and a list of data for each of the hidden layers
         """
-        inputHidden = [None] * self.l
-        inputHidden[0] = data
+        input_hidden = [None] * self.l
+        input_hidden[0] = input_
         
         for i in range(self.l - 1):
-            inputHidden[i + 1] = np.maximum(0, FC.predict(inputHidden[i], self.w[i]))
+            input_hidden[i + 1] = np.maximum(0, FC.fwd(input_hidden[i], self.w[i]))
         
-        output = FC.predict(inputHidden[-1], self.w[-1])
-        return output, inputHidden
+        output = FC.fwd(input_hidden[-1], self.w[-1])
+        return output, input_hidden
 
-    def computeLoss(self, output, label):
+    def compute_loss(self, output, label):
         """
         given the output and true label, 
         return softmax cross entropy loss and gradient on output
         """
         prob = softmax(output)
-        rIdx = np.arange(label.shape[0])
-        loss = -np.log(np.maximum(np.exp(-10), prob[rIdx, label]))
-        dOutput = prob
-        dOutput[rIdx, label] -= 1
-        return loss, dOutput
+        loss = -np.log(np.maximum(np.exp(-10), prob[np.arange(label.shape[0]), label]))
+        d_output = prob
+        d_output[np.arange(label.shape[0]), label] -= 1
+        return loss, d_output
 
-    def gradient(self, dOutput, inputHidden):
+    def compute_gradient(self, d_output, input_hidden):
         """
         given the graident on output and data for hidden layer
         computer the gradient for hidden layer weights
         """
-        dwHidden = [None] * self.l
+        d_w_hidden = [None] * self.l
         for i in reversed(range(self.l)):
-            dOutput, dwHidden[i] = FC.gradient(dOutput, inputHidden[i], self.w[i])      
-            dOutput = dOutput * (1 * (inputHidden[i] > 0))
+            d_output, d_w_hidden[i] = FC.bwd(d_output, input_hidden[i], self.w[i])      
+            d_output *= 1 * (input_hidden[i] > 0)
 
         # normalized the gradient by number of observations
-        for dw in dwHidden:
-            dw /= dOutput.shape[0]
+        for d_w in d_w_hidden:
+            d_w /= d_output.shape[0]
 
-        return dwHidden
+        return d_w_hidden
 
-    def applyGraident(self, dw, stepSize=0.001, regularization=0):
+    def apply_graident(self, d_w, step_size=0.001, regularization=0):
         """
         given gradient, apply gradient on weight with stepsize adjustment and 
         regularization
         """
         for i in range(self.l):
-            self.w[i] -= (dw[i] * stepSize + self.w[i] * regularization)
+            self.w[i] -= (d_w[i] * step_size + self.w[i] * regularization)
 
-
-
-    def trainIteration(self, data, label, debug=False):
+    def train_iteration(self, data, label, debug=False):
         """
         one iteration of learning
         """
         # forawrd feed, get y and x_hidden
-        output, inputHidden = self.predict(data)
+        output, input_hidden = self.compute_output(data)
         
         # measure loss and gradient on y
-        loss, dOutput = self.computeLoss(output, label)
+        loss, d_output = self.compute_loss(output, label)
         
         # backprop, get gradient on weight
-        dwHidden = self.gradient(dOutput, inputHidden)
+        d_w_hidden = self.compute_gradient(d_output, input_hidden)
         
         if debug:
             print('w = ', self.w)
-            print("xhidden = ", inputHidden)
+            print("xhidden = ", input_hidden)
             print("y = ", output)
-            print("dy = ", dOutput)
-            print("dw = ", dwHidden)
+            print("dy = ", d_output)
+            print("dw = ", d_w_hidden)
 
-        return output, loss, dwHidden
+        return output, loss, d_w_hidden
 
-    def trainTestSplit(self, data, label, testPct=0.0):
+    def train_test_split(self, data, label, test_pct=0.0):
         N = data.shape[0]
-        trainSize = np.ceil(N * (1 - testPct)).astype(int)
-        return data[0:trainSize,:], label[0:trainSize], data[trainSize:,:], label[trainSize:]
+        train_size = np.ceil(N * (1 - test_pct)).astype(int)
+        return data[0:train_size,:], label[0:train_size], data[train_size:,:], label[train_size:]
 
     def normalize(self, data):
         data = data - np.mean(data, axis=0)
         return data
 
-
-
-
-    def normalize(self, data):
-        data = data - np.mean(data, axis=0)
-        return data
-
-
-    def train(self, data, label, iteration, stepSize=0.001, regularization=0.0, testPct=0.0, debug=False):
-        sampleSize = 10
-        sampleIndex = np.random.choice(100, sampleSize, replace=False)
+    def fit(self, data, label, iteration, step_size=0.001, regularization=0.0, test_pct=0.0, debug=False):
         start = time.time()
         
-        for i in range(sampleSize):
-            plt.subplot(sampleSize, 2, i * 2 + 1)
-            plt.imshow(data[sampleIndex[i],:].reshape(28,28), cmap='gray')
-            plt.pause(0.001)
-
-
         data = self.normalize(data)
-        dTrain, lTrain, dTest, lTest = self.trainTestSplit(data, label, testPct)
+        d_train, l_train, d_test, l_test = self.train_test_split(data, label, test_pct)
+        
         for t in range(iteration):
-                    
-
             # computer gradient on weight
-            outputTrain, lossTrain, dw = self.trainIteration(dTrain, lTrain, debug)
+            output_train, loss_train, d_w = self.train_iteration(d_train, l_train, debug)
             
             # apply gradient on weight
-            self.applyGraident(dw, stepSize, regularization)
+            self.apply_graident(d_w, step_size, regularization)
 
             # all book keeping
-            outputTest, _ = self.predict(dTest)
+            output_test, _ = self.compute_output(d_test)
 
-            avgLossTrain = np.mean(lossTrain)
+            avg_loss_train = np.mean(loss_train)
 
-            errRateTrain = np.mean(1 * (np.argmax(outputTrain, axis=1) != lTrain))
-            errRateTest  = np.mean(1 * (np.argmax(outputTest, axis=1) != lTest))
+            err_rate_train = np.mean(1 * (np.argmax(output_train, axis=1) != l_train))
+            err_rate_test  = np.mean(1 * (np.argmax(output_test, axis=1) != l_test))
 
-            timeRemain = (time.time() - start) / (t + 1) * (iteration - t - 1)
-            debugStr = 'Iter:{0:4d}|Time:{1:4.4f}|TrainErr:{2:4.4f}|Test Err:{3:4.4f}|Loss:{4:4.4f}'.format(t, timeRemain, errRateTrain,errRateTest,avgLossTrain)
-            print(debugStr, end='\r')
-            
-            prob = softmax(outputTrain)
-            for i in range(sampleSize):
-                plt.subplot(sampleSize, 2, i * 2 + 2)
-                plt.cla()
-                plt.bar(np.arange(10), prob[sampleIndex[i],:])
-                plt.ylim(-0.2, 1.2)
-                plt.pause(0.001)
-            
+            time_remain = (time.time() - start) / (t + 1) * (iteration - t - 1)
+            debug_str = 'Iter:{0:4d} | Time:{1:4.4f} | TrainErr:{2:4.4f} | Test Err:{3:4.4f} | Loss:{4:4.4f}'.format(t, time_remain, err_rate_train,err_rate_test,avg_loss_train)
+            print(debug_str, end='\r')
+
         print('\n\nTime total : {0}'.format(time.time() - start))
-
-
-    def show(self):
-        """
-        visualized the decision bountary
-        """
-        x = np.linspace(-4, 4, 128)
-        y = np.linspace(-4, 4, 128)
-        data = []
-        for xi in x:
-            for yi in y:
-                data.append([xi, yi])
-        
-        data = np.array(data)
-        y, _ = self.predict(data)
-        plot(data[:,0], data[:,1], np.argmax(y, axis=1))
