@@ -1,34 +1,26 @@
 import numpy as np
 import matplotlib.pyplot as plt 
-
 plt.ion()
-from layer import FullyConnectedLayer as FC
+
 from network import NeuralNet
 from utils import dataGen
-from utils import plot
 from utils import softmax
-from time import time
-from utils import cifar
 from utils import mnist
 
-def main():
-    N = 200
- 
-    #data, label = dataGen(N, din)
+from time import time
 
+def main():
 
     (data, label) = mnist()
     data = np.array(data)
     label = np.array(label)
     din = data.shape[1]
-    dh1 = 100
+    dhidden = 100
     dout = 10
-    seed = 42
-    np.random.seed(seed)
     
-    n = NeuralNet([din, dh1, dout])   
+    n = NeuralNet([din, dhidden, dout])   
 
-    stepSize = 1.0
+    stepSize = 0.1
     iteration = 1000
     regularization = 0.0
     debug = False
