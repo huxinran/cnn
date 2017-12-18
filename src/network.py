@@ -3,10 +3,10 @@ neural net class
 """
 import time
 import numpy as np
-from layer import FullyConnectedLayer as FC
-from utils import softmax
-from utils import train_test_split
-from utils import normalize
+from src.layer import FullyConnectedLayer as FC
+from src.utils import softmax
+from src.utils import train_test_split
+from src.utils import normalize
 
 class NeuralNet:
     '''
