@@ -20,11 +20,10 @@ class NeuralNet:
         [din,       dh1, dh2, ..., dhk, dout]
          input -> | hidden layers    | -> output
         '''
-        self.dim = dim
-        self.l = len(self.dim) - 1
         self.w = []
-        for i in range(self.l):
-            self.w.append(FC.init_weight(self.dim[i], self.dim[i + 1]))
+        for i in range(len(dim) - 1):
+            self.w.append(FC.init_weight(dim[i], dim[i + 1]))
+        self.l = len(dim) - 1
 
     def compute_output(self, input_):
         """
@@ -46,7 +45,7 @@ class NeuralNet:
         prob = softmax(output)
         loss = -np.log(np.maximum(np.exp(-10), prob[np.arange(label.shape[0]), label]))
         d_output = prob
-        d_output[np.arange(label.shape[0]), label] -= 1
+        d_output[np.arange(label.shape[0]), label] -= 1.0
         return loss, d_output
 
     def compute_gradient(self, d_output, input_hidden):
@@ -57,7 +56,7 @@ class NeuralNet:
         d_w_hidden = [None] * self.l
         for i in reversed(range(self.l)):
             d_output, d_w_hidden[i] = FC.bwd(d_output, input_hidden[i], self.w[i])
-            d_output *= 1 * (input_hidden[i] > 0)
+            d_output *= input_hidden[i] > 0
         # normalized the gradient by number of observations
         for d_w in d_w_hidden:
             d_w /= d_output.shape[0]
@@ -71,7 +70,7 @@ class NeuralNet:
         for i in range(self.l):
             self.w[i] -= (d_w[i] * step_size + self.w[i] * regularization)
 
-    def train_iteration(self, data, label, debug=False):
+    def train_iteration(self, data, label, debug=1):
         """
         one iteration of learning
         """
@@ -81,7 +80,8 @@ class NeuralNet:
         loss, d_output = self.compute_loss(output, label)
         # backprop, get gradient on weight
         d_w_hidden = self.compute_gradient(d_output, input_hidden)
-        if debug:
+
+        if debug > 1:
             print('w = ', self.w)
             print("xhidden = ", input_hidden)
             print("y = ", output)
@@ -90,7 +90,7 @@ class NeuralNet:
 
         return output, loss, d_w_hidden
 
-    def fit(self, data, label, iteration=10, step_size=0.001, regularization=0.0, test_pct=0.0, debug=False):
+    def fit(self, data, label, iteration=10, step_size=0.001, regularization=0.0, test_pct=0.0, debug=1):
         """
         fit base on data and label
         """
@@ -108,7 +108,9 @@ class NeuralNet:
             err_rate_train = np.mean(1 * (np.argmax(output_train, axis=1) != l_train))
             err_rate_test = np.mean(1 * (np.argmax(output_test, axis=1) != l_test))
             time_remain = (time.time() - start) / (t + 1) * (iteration - t - 1)
-            debug_str = 'Iter:{0:4d} | Time:{1:4.4f} | TrainErr:{2:4.4f} | Test Err:{3:4.4f} | Loss:{4:4.4f}'.format(t, time_remain, err_rate_train, err_rate_test, avg_loss_train)
-            print(debug_str, end='\r')
+            
+            if debug >= 0:
+                debug_str = 'Iter:{0:4d} | Time:{1:4.2f} | TrainErr:{2:4.2f} | Test Err:{3:4.2f} | Loss:{4:4.2f}'.format(t, time_remain, err_rate_train, err_rate_test, avg_loss_train)
+                print(debug_str, end='\r')
 
         print('\n\nTime total : {0}'.format(time.time() - start))

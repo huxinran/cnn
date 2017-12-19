@@ -37,7 +37,7 @@ class FullyConnectedLayer:
         '''
         y = x * w
         '''
-        return np.dot(np.c_[np.ones(x.shape[0]), x], w)
+        return np.c_[np.ones(x.shape[0]), x].dot(w)
 
     @staticmethod
     def bwd(d_y, x, w):
@@ -45,6 +45,6 @@ class FullyConnectedLayer:
         d_x = d_y * w
         d_w = d_x.T * d_y
         '''
-        d_x = np.dot(d_y, w[1:,].T)
-        d_w = np.dot(np.r_[np.ones([1, d_y.shape[0]]), x.T], d_y)
+        d_x = d_y.dot(w[1:,].T)
+        d_w = np.r_[np.ones([1, d_y.shape[0]]), x.T].dot(d_y)
         return d_x, d_w
