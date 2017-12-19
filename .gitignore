@@ -1,0 +1,4 @@
+*.pyc
+*.ipynb
+_pycache__/*
+data/*

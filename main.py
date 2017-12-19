@@ -1,33 +1,32 @@
+"""
+main
+"""
 import numpy as np
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
+from src.network import NeuralNet
+from src.utils import mnist
 plt.ion()
 
-from network import NeuralNet
-from utils import dataGen
-from utils import softmax
-from utils import mnist
-
-from time import time
 
 def main():
-
+    """
+    main func
+    """
+    
     (data, label) = mnist()
     data = np.array(data)
     label = np.array(label)
     din = data[0].size
     dhidden = 100
     dout = np.unique(label).size
-    stepSize = 1
+    step_size = 1
     iteration = 1000
     regularization = 0.0001
     debug = False
-    
-
-    net = NeuralNet([din, 128, dout])   
-    
+    np.random.seed(4)
+    net = NeuralNet([din, dhidden, dout])
     # magic happens
-    net.train(data, label, iteration, stepSize, regularization, debug=debug, testPct=0.001)
-    
+    net.fit(data, label, iteration, step_size, regularization, debug=debug, test_pct=0.001)
     return
 
 if __name__ == "__main__":
