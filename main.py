@@ -19,10 +19,11 @@ def main():
     dout = np.unique(label).size
     stepSize = 1
     iteration = 1000
-    regularization = 0.0
+    regularization = 0.0001
     debug = False
     
-    net = NeuralNet([din, dhidden, dout])   
+
+    net = NeuralNet([din, 128, dout])   
     
     # magic happens
     net.train(data, label, iteration, stepSize, regularization, debug=debug, testPct=0.001)
