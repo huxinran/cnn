@@ -159,7 +159,7 @@ class TestLayer(unittest.TestCase):
             [-1, -2, -3, -4, -5, -6, -7, -8, -9] 
         ])
 
-        y, xconv = l.feed_forward(x)
+        y = l.feed_forward(x)
         y_true = np.array([
             [1, 2, 4, 5, 5.1, 6.1, 8.1, 9.1],
             [-1, -2, -4, -5, -4.9, -5.9, -7.9, -8.9]
@@ -217,7 +217,7 @@ class TestLayer(unittest.TestCase):
 
     def test_cnn_fit(self):
         c = CNN()
-        c.fit(data[0:10, :], label[0:10], 10)
+        c.fit(data[0:100, :], label[0:100], 100)
 
 
 

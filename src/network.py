@@ -7,6 +7,7 @@ from src.layer import FullyConnectedLayer as FC
 from src.utils import softmax
 from src.utils import train_test_split
 from src.utils import normalize
+from src.utils import compute_loss
 
 class NeuralNet:
     '''
@@ -74,7 +75,7 @@ class NeuralNet:
         # forawrd feed, get y and x_hidden
         output, input_hidden = self.compute_output(data)
         # measure loss and gradient on y
-        loss, g_output = self.compute_loss(output, label)
+        loss, g_output = compute_loss(output, label)
         # backprop, get gradient on weight
         g_w_hidden, g_b_hidden = self.compute_gradient(g_output, input_hidden)
         if debug:

@@ -40,7 +40,7 @@ class FullyConnectedLayer:
         '''
         y = x * w + b
         '''
-        return np.dot(x, w) + b
+        return x @ w + b
 
     @staticmethod
     def bwd(dy, x, w):
@@ -49,8 +49,8 @@ class FullyConnectedLayer:
         dw = x.T * dy
         db = 1.T * dy
         '''
-        dx = np.dot(g_y, w.T)
-        dw = np.dot(x.T, dy)
+        dx = dy @ w.T
+        dw = x.T @ dy
         db = np.sum(dy, axis = 0)
         return dx, dw, db
 
