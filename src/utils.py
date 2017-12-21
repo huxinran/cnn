@@ -6,6 +6,17 @@ def softmax(y):
     p = np.exp(y - np.amax(y, axis=1).reshape(-1, 1))
     return p / np.sum(p, axis=1).reshape(-1, 1) 
 
+def compute_loss(output, label):
+    """
+    given the output and true label,
+    return softmax cross entropy loss and gradient on output
+    """
+    prob = softmax(output)
+    loss = -np.log(np.maximum(np.exp(-10), prob[np.arange(label.shape[0]), label]))
+    g_output = prob
+    g_output[np.arange(label.shape[0]), label] -= 1
+    return loss, g_output
+
 def train_test_split(data, label, test_pct=0.0):
     """
     split data, label into train and test set

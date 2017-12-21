@@ -39,16 +39,7 @@ class NeuralNet:
         output = FC.fwd(input_hidden[-1], self.w[-1], self.b[-1])
         return output, input_hidden
 
-    def compute_loss(self, output, label):
-        """
-        given the output and true label,
-        return softmax cross entropy loss and gradient on output
-        """
-        prob = softmax(output)
-        loss = -np.log(np.maximum(np.exp(-10), prob[np.arange(label.shape[0]), label]))
-        g_output = prob
-        g_output[np.arange(label.shape[0]), label] -= 1
-        return loss, g_output
+
 
     def compute_gradient(self, g_output, input_hidden):
         """
