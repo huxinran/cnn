@@ -5,7 +5,7 @@ import utils
 
 class CNN:
     def __init__(self):
-        self.c = ConvLayer([3, 28, 28], [3, 3], 1)
+        self.c = ConvLayer([1, 28, 28], [3, 3], 100)
         self.fc = ConvLayer(self.c.output_shape(), [26, 26], 10)
 
     def train_iteration(self, data, label):
@@ -147,22 +147,24 @@ class ConvLayer:
     def init_conv_index(ishape, fshape, p=0, s=1):        
         di, hi, wi = ishape
         hf, wf = fshape
+        l = np.prod(ishape).astype(int)
 
         row = ConvLayer.get_pos(hi, hf, p, s)
         col = ConvLayer.get_pos(wi, wf, p, s)
-        conv_index = np.zeros([row.size * col.size, di * hf * wf])
+        conv_index = np.zeros([row.size * col.size, di * hf * wf], dtype=int)
         flat_index = np.arange(np.prod(ishape)).reshape(ishape)
+
         r = 0
         for i in row:
             for j in col:
-                conv_index[r, :] = flat_index[:, i:i+hf, j:j+wf].ravel()
+                conv_index[r, :] = flat_index[:, i:i+hf, j:j+wf].ravel().astype(int)
                 r += 1
         return conv_index
     
     @staticmethod
     def flat2conv(flat, index):
-        
-        conv = np.zeros(index.shape)
+        #print(np.amax(index))
+        return flat[index.ravel()].reshape(index.shape)
         l = flat.size
         for i in range(index.shape[0]):
             for j in range(index.shape[1]):
@@ -173,6 +175,7 @@ class ConvLayer:
                 
     @staticmethod
     def conv2flat(conv, index):
+        
         flat = np.zeros(np.amax(index).astype(int) + 1)
         l = flat.size
         for i in range(index.shape[0]):

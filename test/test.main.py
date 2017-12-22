@@ -217,7 +217,7 @@ class TestLayer(unittest.TestCase):
 
     def test_cnn_fit(self):
         c = CNN()
-        c.fit(data[0:100, :], label[0:100], 100)
+        c.fit(data[0:1000, :], label[0:1000], 100)
 
 
 
