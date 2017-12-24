@@ -1,8 +1,12 @@
 """
 fully connected layer class
 """
+
 import numpy as np
-class FullyConnectedLayer:
+from layer import Layer 
+import utils 
+
+class FullyConnectedLayer(Layer):
     '''
     Fully Connected Layer Class represents a general function f(x, w) = y
     it provides 3 utility functions
@@ -27,7 +31,29 @@ class FullyConnectedLayer:
       g_b  | (1, m)           | gradient on bias                  
     ============================================================================
     '''
+    def __init__(self, output):
+        super(FullyConnectedLayer, self).__init__()
+        self.type = 'FC Layer'
+        self.output = np.prod(output, dtype=int)
+    
+    def accept(self, src):
+        self.input = np.prod(src, dtype=int)
 
+        if self.input <= 0:
+            return False
 
+        self.w = np.random.normal(0, 1, [self.input, self.output])
+        self.b = np.random.normal(0, 1, [1, self.output])
+        self.src = [self.input]
+        self.shape = [self.output]
+        self.x = None
+        return True
+        
+    def forward(self, x):
+        y = utils.forward(x, self.w, self.b) 
+        self.x = x
+        return y
 
-
+    def backward(self, dy):
+        dx, dw, db = utils.backward(dy, self.x, self.w)
+        return dx, dw, db

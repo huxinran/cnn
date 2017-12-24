@@ -1,6 +1,68 @@
+import utils
 import numpy as np
-import utils 
 
+class ConvLayer:
+    def __init__(self, height_k, width_k, depth_out, pad = 0, stride = 1):
+        
+        super(ConvLayer, self).__init__()
+        self.type = 'ConvLayer'
+        self.height_k  = height_k
+        self.width_k = width_k
+        self.depth_out = depth_out
+        self.pad = pad
+        self.stride = stride
+
+    def accept(self, depth_in, height_in, width_in):
+        
+        if (height_in + 2 * self.pad - self.height_k + 1) % self.stride != 0:
+            return False
+        
+        if (width_in + 2 * self.pad - self.width_k + 1) % self.stride != 0:
+            return False
+
+        self.depth_in = depth_in
+        self.height_in = height_in
+        self.width_in = width_in
+
+        self.depth_k = depth_in
+        
+        self.kernel_len = self.depth_k * self.height_k * self.width_k
+
+        self.height_pos = utils.get_pos(self.height_in, self.height_k, self.pad, self.stride)
+        self.width_pos = utils.get_pos(self.width_in, self.width_k, self.pad, self.stride)
+        self.height_out = self.height_pos.size
+        self.width_out = self.width_pos.size
+        
+        self.shape = [self.depth_out, self.height_out, self.width_out]
+        
+        self.w = np.random.normal(0, 1, [self.kernel_len, self.depth_out])
+        self.b = np.random.normal(0, 1, [1, self.depth_out])
+        self.patches = None
+        return True 
+
+    def forward(self, x):
+        N, depth_in, height_in, width_in = x.shape
+        patch = utils.flatten(x, [self.height_k, self.width_k], self.pad, self.stride)
+        self.xpatch = patch.reshape(N * self.height_out * self.width_out, -1)
+        ycol = utils.forward(self.xpatch, self.w, self.b)
+        y = ycol.reshape([N, -1])
+        return y
+
+    def backward(self, dy):
+        N = dy.shape[0]
+        dpatch, dw, db = utils.gradient(dy, self.xcol, self.w)
+        dpatch = dpatch.reshape([N, self.height_out * self.width_out, -1])
+        dx = utils.unflatten(dpatch, 
+                             [N, self.depth_in, self.height_in, self.width_in],
+                             [self.height_k, self.width_k],
+                             self.pad, 
+                             self.stride)
+        self.w -= dw
+        self.b -= db
+        return dx
+
+
+'''
 
 
 class CNN:
@@ -34,12 +96,14 @@ class CNN:
             #print(loss)
             print(t, np.mean(loss))
 
+'''
 
 
-
-
+'''
 class ConvLayer:
-    '''
+'''
+
+'''
     Conv Layer Class represents conv layer that apply filters on an input image 
     and produce an output image
 
@@ -92,7 +156,7 @@ class ConvLayer:
       g_b  | (1, m)           | gradient on bias                  
     ============================================================================
     '''
-
+'''
     def __init__(self, input_shape, filter_shape, output_depth, padding=0, stride=1):        
         
         self.di, self.hi, self.wi = input_shape[0], input_shape[1], input_shape[2]    
@@ -137,3 +201,4 @@ class ConvLayer:
             dw += dwi
             db += dbi
         return dx, dw / N, db / N
+        '''
