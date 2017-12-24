@@ -27,32 +27,6 @@ class FullyConnectedLayer:
       g_b  | (1, m)           | gradient on bias                  
     ============================================================================
     '''
-    @staticmethod
-    def init_weight(n, m):
-        '''
-        init weight (with bias)
-        '''
-        sd = 1 / np.sqrt(n)
-        return np.random.normal(0, sd, [n, m]), np.random.normal(0, sd, [1, m])
-
-    @staticmethod
-    def fwd(x, w, b):
-        '''
-        y = x * w + b
-        '''
-        return x @ w + b
-
-    @staticmethod
-    def bwd(dy, x, w):
-        '''
-        dx = dy * w
-        dw = x.T * dy
-        db = 1.T * dy
-        '''
-        dx = dy @ w.T
-        dw = x.T @ dy
-        db = np.sum(dy, axis = 0)
-        return dx, dw, db
 
 
 
