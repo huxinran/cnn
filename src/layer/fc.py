@@ -34,19 +34,19 @@ class FullyConnectedLayer(Layer):
     '''
 
     
-    def __init__(self, output_shape):
+    def __init__(self, shape):
         super(FullyConnectedLayer, self).__init__()
         self.type = 'FullyConnected'
-        self.shape = np.array(output_shape)
-    
-    def accept(self, input_shape):
-        self.input_shape = np.array(input_shape)
+        self.shape = shape
+        self.dim_out = np.prod(self.shape, dtype=int)
 
+    def accept(self, shape_in):
+        self.shape_in = shape_in
+        self.dim_in = np.prod(self.shape_in, dtype=int)
+        
         # params
-        d_in = np.prod(self.input_shape, dtype=int)
-        d_out = np.prod(self.shape, dtype=int)
-        self.w = np.random.normal(0, 1, [d_in, d_out])
-        self.b = np.random.normal(0, 1, [1, d_out])
+        self.w = np.random.normal(0, 1.0 / np.sqrt(self.dim_in), [self.dim_in, self.dim_out])
+        self.b = np.random.normal(0, 1.0 / np.sqrt(self.dim_in), [1, self.dim_out])
         
         # cache
         self.x = None
@@ -59,10 +59,12 @@ class FullyConnectedLayer(Layer):
         return utils.forward(x, self.w, self.b) 
         
     def backward(self, dy):
+        N = dy.shape[0]
         dx, dw, db = utils.backward(dy, self.x, self.w)
         self.x = None
-        self.dw = dw
-        self.db = db
+
+        self.dw = dw / N
+        self.db = db / N
         return dx
     
     def learn(self, param):

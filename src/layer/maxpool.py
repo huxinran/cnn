@@ -4,70 +4,72 @@ import utils
 
 
 class MaxPoolLayer(Layer):
-    def __init__(self, kernel_shape=(2, 2)):
+    def __init__(self, shape_k=(2, 2)):
         super(MaxPoolLayer, self).__init__()
         self.type = 'MaxPool'
-        self.kernel_shape = kernel_shape 
+        self.shape_k = shape_k 
         self.pad = (0, 0)
-        self.stride = self.kernel_shape
+        self.stride = self.shape_k
 
-    def accept(self, input_shape):
-        if input_shape[1] % self.kernel_shape[0] != 0:
+    def accept(self, shape_in):
+        if shape_in[1] % self.shape_k[0] != 0:
             return False
         
-        if input_shape[2] % self.kernel_shape[1] != 0:
+        if shape_in[2] % self.shape_k[1] != 0:
             return False
 
-        self.input_shape = input_shape
+        self.shape_in = shape_in
 
-        self.shape = np.array((input_shape[0], 
-                               input_shape[1] / self.kernel_shape[0], 
-                               input_shape[2] / self.kernel_shape[1]), dtype=int)
+        self.shape = np.array((shape_in[0], 
+                               shape_in[1] / self.shape_k[0], 
+                               shape_in[2] / self.shape_k[1]), dtype=int)
         
-        self.indice = utils.flatten_index(self.input_shape, 
-                                          self.kernel_shape, 
+        self.indice = utils.flatten_index(self.shape_in, 
+                                          self.shape_k, 
                                           self.pad, 
                                           self.stride)
 
-        self.d_in = np.prod(self.input_shape, dtype=int)
-        self.d_out = np.prod(self.shape, dtype=int)
-        self.d_kernel = np.prod(self.kernel_shape, dtype=int)
+        self.dim_in = np.prod(self.shape_in, dtype=int)
+        self.dim_out = np.prod(self.shape, dtype=int)
+        self.dim_k = np.prod(self.shape_k, dtype=int)
+        
+        # cache
         self.max_indice = None
         return True
 
     def forward(self, x):
         N = x.shape[0]
         
-        y = np.zeros([N, self.d_out])
+        y = np.zeros([N, self.dim_out])
         
-        self.max_indice = np.zeros([N, self.d_out], dtype=int)
+        self.max_indice = np.zeros([N, self.dim_out], dtype=int)
         
         for i in range(N):
-            flat_xi = utils.flatten(x[i,].reshape(self.input_shape), 
-                                   self.input_shape, 
-                                   self.kernel_shape, 
-                                   self.pad, 
-                                   self.stride, 
-                                   self.indice).reshape(-1, self.d_kernel)
+            fxi = utils.flatten(x[i,].reshape(self.shape_in), 
+                                self.shape_in, 
+                                self.shape_k, 
+                                self.pad, 
+                                self.stride, 
+                                self.indice).reshape(-1, self.dim_k)
 
-            self.max_indice[i, ] = np.argmax(flat_xi, axis=1)
+            self.max_indice[i, ] = np.argmax(fxi, axis=1)
 
-            y[i, ] = flat_xi[np.arange(self.d_out), self.max_indice[i, ]].reshape(-1, self.input_shape[0]).T.ravel()
+            y[i, ] = fxi[np.arange(self.dim_out), self.max_indice[i, ]].reshape(-1, self.shape_in[0]).T.ravel()
         return y
 
     def backward(self, dy):
         N = dy.shape[0]
         
-        dx = np.zeros([N, self.d_in])
+        dx = np.zeros([N, self.dim_in])
 
         for i in range(N):
-            dflat_x = np.zeros([self.d_out, self.d_kernel])
+            dfxi = np.zeros([self.dim_out, self.dim_k])
 
-            dflat_x[np.arange(self.d_out), self.max_indice[i,]] = dy[i,].reshape(self.shape).transpose([1, 2, 0]).ravel()
+            dfxi[np.arange(self.dim_out), self.max_indice[i,]] = dy[i,].reshape(self.shape).transpose([1, 2, 0]).ravel()
             
-            dx[i, ] = utils.unflatten(dflat_x, 
-                                      self.input_shape, 
-                                      self.kernel_shape, 
+            dx[i, ] = utils.unflatten(dfxi, 
+                                      self.shape_in, 
+                                      self.shape_k, 
                                       self.pad, 
                                       self.stride, 
                                       self.indice).ravel()

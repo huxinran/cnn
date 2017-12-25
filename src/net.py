@@ -31,6 +31,10 @@ class Net:
         for l in reversed(self.layer):
             dx = l.backward(dx)
 
+    def learn(self, config):
+        for l in self.layer:
+            l.learn(config)
+
     def evaluate(self, y, y_true):
         p = utils.softmax(y)
         return utils.cross_entropy(p, y_true)
@@ -41,6 +45,11 @@ class Net:
         loss, dy = self.evaluate(y, y_true)
         
         self.backward(dy)
+
+        config = {
+            'step_size' : 0.1
+        }
+        self.learn(config)
 
         return loss
 
