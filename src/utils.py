@@ -53,34 +53,40 @@ def pad_img(img, pad):
     '''
     pad img with zeros
     '''
-    if pad == 0:
+    if pad[0] == 0 and pad[1] == 0:
         return img
     elif pad > 0:
-        return np.pad(img, ((0, 0), (pad, pad), (pad, pad)), 'constant')
+        return np.pad(img, ((0, 0), (pad[0], pad[0]), (pad[1], pad[1])), 'constant')
 
 def unpad_img(padded_img, pad):
     '''
     remove padded zeros
     '''
-    if pad == 0:
+    if pad[0] == 0 and pad[1] == 0:
         return padded_img
     else:
-        return img[:, pad:-pad, pad:-pad]
+        return img[:, pad[0]:-pad[0], pad[1]:-pad[1]]
 
-def flatten_index(img_shape, kernel_shape, pad=0, stride=1):
+def flatten_index(img_shape, kernel_shape, pad, stride):
     '''
     used to vectorize flatten
     '''
+    #assert(img_shape.ndim == 3)
+    #assert(kernel_shape.ndim == 2)
+    
     depth_img, height_img, width_img = img_shape
     height_k, width_k = kernel_shape    
     
+
     k, i, j = np.meshgrid(np.arange(depth_img), 
                           np.arange(height_k), 
                           np.arange(width_k), 
                           indexing='ij')
 
-    i_pos = get_pos(height_img, height_k, pad, stride)
-    j_pos = get_pos(width_img, width_k, pad, stride)
+    height_pad, width_pad = pad
+    height_stride, width_stride = stride
+    i_pos = get_pos(height_img, height_k, height_pad, height_stride)
+    j_pos = get_pos(width_img, width_k, width_pad, width_stride)
     
     i_base, j_base = np.meshgrid(i_pos, j_pos, indexing='ij')
     
@@ -89,24 +95,21 @@ def flatten_index(img_shape, kernel_shape, pad=0, stride=1):
     k = np.tile(k.ravel(), i_pos.size * j_pos.size)
     return (k, i, j)
 
-def flatten(img, img_shape, kernel_shape, pad, stride):
+def flatten(img, img_shape, kernel_shape, pad, stride, indice=None):
     '''
-    this will flatten a 3-d img into a 2-d array of patches
-    ith row of col is pixel of the ith patch arranged by [d, h, w] order  
+    flatten a 3-d img into a 2-d array of patches
+    ith row of patch is pixel of the ith location of patch arranged in [d, h, w] order  
     '''
-
-
     padded_img = pad_img(img, pad)
     
-    k, i, j = flatten_index(img_shape, kernel_shape, pad, stride)
-    
-    depth_img, height_img, width_img = img.shape
-    
-    height_k, width_k = kernel_shape
+    if indice is None:
+        k, i, j = flatten_index(img_shape, kernel_shape, pad, stride)
+    else:
+        k, i, j = indice 
 
-    return padded_img[k, i, j].reshape(-1, depth_img * height_k * width_k)
+    return padded_img[k, i, j]
 
-def unflatten(patch, img_shape, kernel_shape, pad, stride):
+def unflatten(patch, img_shape, kernel_shape, pad, stride, indice=None):
     '''
     unflatten 2-d array into a a 3-d img 
     ith row of col is pixel of the ith patch arranged by [d, h, w] order  
@@ -114,12 +117,14 @@ def unflatten(patch, img_shape, kernel_shape, pad, stride):
     
     padded_img = pad_img(np.zeros(img_shape), pad)
 
-    k, i, j = flatten_index(img_shape, kernel_shape, pad, stride)
+    if indice is None:
+        k, i, j = flatten_index(img_shape, kernel_shape, pad, stride)
+    else:
+        k, i, j = indice 
 
     np.add.at(padded_img, (k, i, j), patch.ravel())
 
     return unpad_img(padded_img, pad)
-
 
 def split(data, label, pct=0.0):
     """
@@ -136,82 +141,3 @@ def normalize(data):
     """
     data = data - np.mean(data, axis=0)
     return data
-
-
-
-
-
-
-
-
-
-
-# these may be deprecated 
-
-def init_conv_index(input_shape, filter_shape, padding=0, stride=1):
-    '''
-
-    '''       
-    di, hi, wi = inpit_shape
-    hf, wf = filter_shape
-    row_pos = get_pos(hi, hf, p, s)
-    col_pos = get_pos(wi, wf, p, s)
-
-    conv_index = np.zeros([row_pos.size * col_pos.size, di * hf * wf], dtype=int)
-    flat_index = np.arange(np.prod(input_shape, dtype=int)).reshape(input_shape)
-    r = 0
-    for i in row_pos:
-        for j in col_pos:
-            conv_index[r, :] = flat_index[:, i : i + hf, j : j + wf].ravel()
-            r += 1
-    return conv_index
-
-def flat2conv(flat, index):
-
-    #print(np.amax(index))
-    return flat[index.ravel()].reshape(index.shape)
-    l = flat.size
-    for i in range(index.shape[0]):
-        for j in range(index.shape[1]):
-            t = index[i][j].astype(int)
-            if t >= 0 and t < l:
-                conv[i][j] = flat[t]
-    return conv
-            
-
-def conv2flat(conv, index):
-    
-    flat = np.zeros(np.amax(index).astype(int) + 1)
-    l = flat.size
-    for i in range(index.shape[0]):
-        for j in range(index.shape[1]):
-            t = index[i][j].astype(int)
-            if t >= 0 and t < l:
-                flat[t] += conv[i][j]
-    return flat
-
-def fwd(x, w, b, index):
-    xconv = ConvLayer.flat2conv(x, index)
-    yconv = xconv @ w + b
-    return yconv.T.ravel(), xconv
-
-
-def bwd(dy, xconv, w, index):
-    dyconv = dy.reshape(-1, xconv.shape[0]).T
-    dxconv = dyconv @ w.T
-    dw = xconv.T @ dyconv
-    db = np.sum(dyconv, axis = 0)
-    dx = ConvLayer.conv2flat(dxconv, index)
-    return dx, dw, db
-    
-
-
-
-
-
-
-
-
-
-
-

@@ -69,7 +69,7 @@ class TestUtils(unittest.TestCase):
 
 
     def test_flatten_index(self):
-        [k, i, j] = utils.flatten_index([2, 3, 3], [2, 2], 0, 1)
+        [k, i, j] = utils.flatten_index((2, 3, 3), (2, 2), (0, 0), (1, 1))
 
         self.assertTrue(np.allclose(k, [0, 0, 0, 0, 1, 1, 1, 1,
                                         0, 0, 0, 0, 1, 1, 1, 1,
@@ -96,12 +96,12 @@ class TestUtils(unittest.TestCase):
                          [-4, -5, -6], 
                          [-7, -8, -9]]])
 
-        patch = utils.flatten(img, (2, 3, 3), (2, 2), 0, 1)
+        patch = utils.flatten(img, (2, 3, 3), (2, 2), (0, 0), (1, 1))
 
-        self.assertTrue(np.allclose(patch, [[1, 2, 4, 5, -1, -2, -4, -5], 
-                                            [2, 3, 5, 6, -2, -3, -5, -6],
-                                            [4, 5, 7, 8, -4, -5, -7, -8],
-                                            [5, 6, 8, 9, -5, -6, -8, -9]]))
+        self.assertTrue(np.allclose(patch, [1, 2, 4, 5, -1, -2, -4, -5, 
+                                            2, 3, 5, 6, -2, -3, -5, -6,
+                                            4, 5, 7, 8, -4, -5, -7, -8,
+                                            5, 6, 8, 9, -5, -6, -8, -9]))
 
     def test_unflatten(self):
         
@@ -109,10 +109,7 @@ class TestUtils(unittest.TestCase):
                         [0, 0, 0, 0, 1, 1, 1, 1],
                         [0, 0, 0, 0, 0, 1, 0, 0],
                         [0, 0, 0, 0, 0, 0, 1, 0]])
-
-        img = utils.unflatten(col, (2, 3, 3), [2, 2], 0, 1)
-        
-        print(img)
+        img = utils.unflatten(col, (2, 3, 3), (2, 2), (0, 0), (1, 1))
         img_true = np.array([[[1, 1, 0], 
                               [1, 1, 0], 
                               [0, 0, 0]], 
