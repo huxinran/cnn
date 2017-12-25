@@ -10,9 +10,11 @@ sys.path.append('C:\\Users\\Xinran\\Desktop\\cnn\\src\\')
 sys.path.append('C:\\Users\\Xinran\\Desktop\\cnn\\src\\layer')
 
 plt.ion()
-from fc_layer import FullyConnectedLayer as FC
-from conv_layer import ConvLayer as Conv
-from relu_layer import ReluLayer as Relu
+from fc import FullyConnectedLayer as FC
+from conv import ConvLayer as Conv
+from relu import ReluLayer as Relu
+from maxpool import MaxPoolLayer as MaxPool
+
 
 def main():
     """
@@ -20,8 +22,8 @@ def main():
     """
     
     (data, label) = mnist()
-    data = np.array(data)[0:100, ]
-    label = np.array(label)[0:100, ]
+    data = np.array(data)[0:1000, ]
+    label = np.array(label)[0:1000, ]
     din = data[0].size
     dhidden = 100
     dout = np.unique(label).size
@@ -33,13 +35,15 @@ def main():
     np.random.seed(42)
 
     n = Net([1, 28, 28])
-    conv = Conv([3, 3], 3)
+    conv = Conv([3, 3], 6)
     relu = Relu()
+    pool = MaxPool()
     fc = FC([10])
 
-    n.add_layer(conv)
-    n.add_layer(relu)
-    n.add_layer(fc)
+    n.add(conv)
+    n.add(relu)
+    n.add(pool)
+    n.add(fc)
     
     print(n)
     n.fit(data, label, 20)

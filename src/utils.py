@@ -53,35 +53,40 @@ def pad_img(img, pad):
     '''
     pad img with zeros
     '''
-    if pad == 0:
+    if pad[0] == 0 and pad[1] == 0:
         return img
     elif pad > 0:
-        return np.pad(img, ((0, 0), (pad, pad), (pad, pad)), 'constant')
+        return np.pad(img, ((0, 0), (pad[0], pad[0]), (pad[1], pad[1])), 'constant')
 
 def unpad_img(padded_img, pad):
     '''
     remove padded zeros
     '''
-    print(padded_img)
-    if pad == 0:
+    if pad[0] == 0 and pad[1] == 0:
         return padded_img
     else:
-        return img[:, pad:-pad, pad:-pad]
+        return img[:, pad[0]:-pad[0], pad[1]:-pad[1]]
 
-def flatten_index(img_shape, kernel_shape, pad=0, stride=1):
+def flatten_index(img_shape, kernel_shape, pad, stride):
     '''
     used to vectorize flatten
     '''
+    #assert(img_shape.ndim == 3)
+    #assert(kernel_shape.ndim == 2)
+    
     depth_img, height_img, width_img = img_shape
     height_k, width_k = kernel_shape    
     
+
     k, i, j = np.meshgrid(np.arange(depth_img), 
                           np.arange(height_k), 
                           np.arange(width_k), 
                           indexing='ij')
 
-    i_pos = get_pos(height_img, height_k, pad, stride)
-    j_pos = get_pos(width_img, width_k, pad, stride)
+    height_pad, width_pad = pad
+    height_stride, width_stride = stride
+    i_pos = get_pos(height_img, height_k, height_pad, height_stride)
+    j_pos = get_pos(width_img, width_k, width_pad, width_stride)
     
     i_base, j_base = np.meshgrid(i_pos, j_pos, indexing='ij')
     
@@ -102,7 +107,7 @@ def flatten(img, img_shape, kernel_shape, pad, stride, indice=None):
     else:
         k, i, j = indice 
 
-    return padded_img[k, i, j].reshape(-1, img_shape[0] * kernel_shape[0] * kernel_shape[1])
+    return padded_img[k, i, j]
 
 def unflatten(patch, img_shape, kernel_shape, pad, stride, indice=None):
     '''

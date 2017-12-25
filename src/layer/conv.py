@@ -6,13 +6,14 @@ class ConvLayer(Layer):
     def __init__(self, kernel_shape, depth_out, pad=0, stride=1):        
         super(ConvLayer, self).__init__()
         self.type = 'Convolution'
+        self.kernel_shape = kernel_shape
         self.height_k, self.width_k = kernel_shape
         self.depth_out = depth_out
         self.pad = pad
         self.stride = stride
 
     def accept(self, input_shape):
-        depth_in, height_in, width_in = input_shape
+        depth_in, height_in, width_in = input_shape[0], input_shape[1], input_shape[2]
         
         if (height_in + 2 * self.pad - self.height_k + 1) % self.stride != 0:
             return False
@@ -25,10 +26,6 @@ class ConvLayer(Layer):
 
         self.depth_in, self.height_in, self.width_in = depth_in, height_in, width_in
         
-        #self.height_in = height_in
-        
-        #self.width_in = width_in
-
         self.depth_k = depth_in
 
         self.height_pos = utils.get_pos(self.height_in, self.height_k, self.pad, self.stride)
@@ -40,10 +37,9 @@ class ConvLayer(Layer):
         self.shape = np.array([self.depth_out, self.height_out, self.width_out])
         
         
-        self.indice = utils.flatten_index([self.depth_in, self.height_in, self.width_in],
-                                          [self.height_k, self.width_k], 
-                                          self.pad, 
-                                          self.stride) 
+        self.indice = utils.flatten_index(self.input_shape, self.kernel_shape, 
+                                          (self.pad, self.pad),
+                                          (self.stride, self.stride)) 
 
         # params
         kernel_len = self.depth_k * self.height_k * self.width_k
@@ -52,6 +48,8 @@ class ConvLayer(Layer):
         
         # cache
         self.flat_x = None
+        self.dw = None
+        self.db = None
         
         return True 
 
@@ -62,15 +60,18 @@ class ConvLayer(Layer):
 
         x = x.reshape(N, self.depth_in, self.height_in, self.width_in)
         
-        y = np.zeros([N, self.depth_out * self.height_out * self.width_out]) 
+        y = np.zeros([N, np.prod(self.shape, dtype=int)]) 
         
-        self.flat_x = np.zeros([N, self.height_out * self.width_out, self.height_k * self.width_k])
+        self.flat_x = np.zeros((N, self.height_out * self.width_out, self.height_k * self.width_k))
 
         for i in range(N):
             xi = x[i, :].reshape(self.depth_in, self.height_in, self.width_in)
-            self.flat_x[i, :, :] = utils.flatten(xi, self.input_shape, 
-                                                 [self.height_k, self.width_k], 
-                                                 self.pad, self.stride, self.indice) 
+            self.flat_x[i, :, :] = utils.flatten(xi, 
+                                                 self.input_shape, 
+                                                 self.kernel_shape, 
+                                                 (self.pad, self.pad),
+                                                 (self.stride, self.stride), 
+                                                 self.indice).reshape(self.height_out * self.width_out, -1) 
 
             y[i, :] = utils.forward(self.flat_x[i, :, :], self.w, self.b).T.ravel()
         
@@ -88,14 +89,20 @@ class ConvLayer(Layer):
 
             dflat_xi, dwi, dbi = utils.backward(dyi, self.flat_x[i, ], self.w)
 
-            dxi = utils.unflatten(dflat_xi, self.input_shape,
-                                        [self.height_k, self.width_k], 
-                                        self.pad, self.stride, self.indice) 
-            print(dxi)
+            dxi = utils.unflatten(dflat_xi, 
+                                  self.input_shape,
+                                  self.kernel_shape,
+                                  (self.pad, self.pad),
+                                  (self.stride, self.stride),
+                                  self.indice) 
             dx[i,] = dxi.ravel()
             dw += dwi
             db += dbi
-        print(self.w.dtype, type(dw))
-        self.w -= dw
-        self.b -= db
+
+        self.dw = dw
+        self.db = db
         return dx
+    
+    def learn(self, config):
+        self.w -= config['step_size'] * self.dw
+        self.b -= config['step_size'] * self.db

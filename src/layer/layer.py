@@ -1,11 +1,15 @@
 class Layer:
     def __init__(self):
         self.type = 'Unknown'
-        self.shape_input = None
+        self.input_shape = None
         self.shape = None
         
+        self.cache = None
+        self.param = None
+        self.dparam = None
+        
     def __repr__(self):
-        return '{0} Layer | {1} => {2}'.format(self.type, self.shape_input, self.shape)
+        return '{0} Layer | {1} => {2}'.format(self.type, self.input_shape, self.shape)
 
     # each layer type, please implement the following
     def accept(self, src):
@@ -34,3 +38,9 @@ class Layer:
         (3) return dx
         '''
         raise Exception('backward is not implemented')
+
+    def learn(self, config):
+        '''
+        call after backward
+        '''
+        raise Exception('learn is not implmented')

@@ -32,10 +32,11 @@ class FullyConnectedLayer(Layer):
     Fully Connected Layer Class represents a general function f(x, w) = y
     it provides 3 utility functions
     '''
+
     
     def __init__(self, output_shape):
         super(FullyConnectedLayer, self).__init__()
-        self.type = 'Fully Connected'
+        self.type = 'FullyConnected'
         self.shape = np.array(output_shape)
     
     def accept(self, input_shape):
@@ -49,6 +50,8 @@ class FullyConnectedLayer(Layer):
         
         # cache
         self.x = None
+        self.dw = None
+        self.db = None
         return True
         
     def forward(self, x):
@@ -57,7 +60,11 @@ class FullyConnectedLayer(Layer):
         
     def backward(self, dy):
         dx, dw, db = utils.backward(dy, self.x, self.w)
-        self.w -= dw
-        self.b -= db
         self.x = None
+        self.dw = dw
+        self.db = db
         return dx
+    
+    def learn(self, param):
+        self.w -= self.dw * param['step_size']
+        self.b -= self.db * param['step_size'] 

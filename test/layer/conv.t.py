@@ -94,8 +94,8 @@ class TestConvLayer(unittest.TestCase):
         b_true = np.array([10, -10])
 
         self.assertTrue(np.allclose(dx, dx_true))
-        self.assertTrue(np.allclose(l.w, w_true))
-        self.assertTrue(np.allclose(l.b, b_true))
+        self.assertTrue(np.allclose(l.dw, w_true))
+        self.assertTrue(np.allclose(l.db, b_true))
 
 
     def test_repr(self):

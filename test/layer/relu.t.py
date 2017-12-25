@@ -4,7 +4,7 @@ import numpy as np
 import sys
 sys.path.append('C:\\Users\\Xinran\\Desktop\\cnn\\src\\layer\\')
 
-from relu_layer import ReluLayer as Relu
+from relu import ReluLayer as Relu
 
 
 class TestReluLayer(unittest.TestCase):
