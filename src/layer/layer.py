@@ -1,15 +1,16 @@
 class Layer:
     def __init__(self):
+        '''
+        five common parameters of all types of layer
+        '''
         self.type = 'Unknown'
-        self.input_shape = None
-        self.shape = None
-        
-        self.cache = None
-        self.param = None
-        self.dparam = None
+        self.shape_in = []
+        self.shape = []
+        self.dim_in = 0
+        self.dim_out = 0
         
     def __repr__(self):
-        return '{0} Layer | {1} => {2}'.format(self.type, self.input_shape, self.shape)
+        return '{0} Layer | {1} => {2}'.format(self.type, self.shape_in, self.shape)
 
     # each layer type, please implement the following
     def accept(self, src):

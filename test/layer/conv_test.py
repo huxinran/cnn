@@ -9,21 +9,25 @@ from conv import ConvLayer as Conv
 class TestConvLayer(unittest.TestCase):
     def test_init(self):
         l = Conv([2, 2], 2)
-        self.assertEqual(l.height_k, 2)
-        self.assertEqual(l.width_k, 2)
-        self.assertEqual(l.depth_out, 2)
-        self.assertEqual(l.pad, 0)
-        self.assertEqual(l.stride, 1)
+        self.assertEqual(l.hk, 2)
+        self.assertEqual(l.wk, 2)
+        self.assertEqual(l.dout, 2)
+        self.assertEqual(l.pad[0], 0)
+        self.assertEqual(l.pad[1], 0)
+        self.assertEqual(l.stride[0], 1)
+        self.assertEqual(l.stride[1], 1)
         self.assertEqual(l.type, 'Convolution')
 
     def test_accept(self):
         l = Conv([2, 2], 2)
         l.accept([2, 3, 3])
-        self.assertEqual(l.height_k, 2)
-        self.assertEqual(l.width_k, 2)
-        self.assertEqual(l.depth_out, 2)
-        self.assertEqual(l.pad, 0)
-        self.assertEqual(l.stride, 1)
+        self.assertEqual(l.hk, 2)
+        self.assertEqual(l.wk, 2)
+        self.assertEqual(l.dout, 2)
+        self.assertEqual(l.pad[0], 0)
+        self.assertEqual(l.pad[1], 0)
+        self.assertEqual(l.stride[0], 1)
+        self.assertEqual(l.stride[1], 1)
         self.assertEqual(l.type, 'Convolution')
 
     def test_forward(self):
@@ -69,7 +73,7 @@ class TestConvLayer(unittest.TestCase):
 
         l.b = np.array([[0.0, 0.1]])
         
-        l.flat_x = np.array([[
+        l.fx = np.array([[
             [1, 2, 3, 4],
             [11, 12, 13, 14],
             [21, 22, 23, 24],

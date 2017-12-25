@@ -6,18 +6,19 @@ class ReluLayer(Layer):
         super(ReluLayer, self).__init__()
         self.type = 'Relu'
     
-    def accept(self, src):
-        self.src = np.array(src)
-        self.input_shape = np.array(src)
-        self.shape = np.array(src)
+    def accept(self, shape_in):
+        self.shape_in = shape_in
+        self.shape = shape_in
+        self.dim_in = np.prod(self.shape_in, dtype=int)
+        self.dim_out = np.prod(self.shape, dtype=int)
         return True
 
     def forward(self, x):
-        self.x = x
-        return np.maximum(0, x)
+        self.x = np.maximum(0, x)
+        return self.x
     
     def backward(self, dy):
-        return dy.reshape(self.x.shape) * (1 * self.x > 0)
+        return dy * (1 * self.x > 0)
     
     def learn(self, config):
         return
