@@ -5,7 +5,7 @@ class Layer:
         self.shape = None
         
     def __repr__(self):
-        return '{0} Layer | {1} => {2}'.format(self.type, self.src, self.shape)
+        return '{0} Layer | {1} => {2}'.format(self.type, self.shape_input, self.shape)
 
     # each layer type, please implement the following
     def accept(self, src):

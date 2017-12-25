@@ -2,9 +2,9 @@ import unittest
 import numpy as np
 
 import sys
-sys.path.append('C:\\Users\\Xinran\\Desktop\\cnn\\src\\')
+sys.path.append('C:\\Users\\Xinran\\Desktop\\cnn\\src\\layer\\')
 
-from fc_layer import FullyConnectedLayer
+from fc import FullyConnectedLayer
 
 class TestFCLayer(unittest.TestCase):
     def test_init(self):

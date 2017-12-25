@@ -12,7 +12,7 @@ class Net:
     def __repr__(self):
         return '/n'.join(['Layer {0} : {1}'.format(i, str(l)) for i, l in enumerate(self.layer)])
         
-    def add_layer(self, layer):
+    def add(self, layer):
         if layer.accept(self.shape):
             self.shape = layer.shape
             self.layer.append(layer)

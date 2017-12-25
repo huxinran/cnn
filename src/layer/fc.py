@@ -27,14 +27,14 @@ from layer import Layer
 import numpy as np
 import utils 
 
-class FullyConnected(Layer):
+class FullyConnectedLayer(Layer):
     '''
     Fully Connected Layer Class represents a general function f(x, w) = y
     it provides 3 utility functions
     '''
     
     def __init__(self, output_shape):
-        super(FullyConnected, self).__init__()
+        super(FullyConnectedLayer, self).__init__()
         self.type = 'Fully Connected'
         self.shape = np.array(output_shape)
     
