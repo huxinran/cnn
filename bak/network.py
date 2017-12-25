@@ -7,6 +7,7 @@ from src.layer import FullyConnectedLayer as FC
 from src.utils import softmax
 from src.utils import train_test_split
 from src.utils import normalize
+from src.utils import compute_loss
 
 class NeuralNet:
     '''
@@ -20,10 +21,19 @@ class NeuralNet:
         [din,       dh1, dh2, ..., dhk, dout]
          input -> | hidden layers    | -> output
         '''
+<<<<<<< HEAD:bak/network.py
+        self.dim = dim
+        self.l = len(self.dim) - 1
+        self.w = [None] * self.l
+        self.b = [None] * self.l
+        for i in range(self.l):
+            self.w[i], self.b[i] = FC.init_weight(self.dim[i], self.dim[i + 1])
+=======
         self.w = []
         for i in range(len(dim) - 1):
             self.w.append(FC.init_weight(dim[i], dim[i + 1]))
         self.l = len(dim) - 1
+>>>>>>> master:src/network.py
 
     def compute_output(self, input_):
         """
@@ -33,10 +43,12 @@ class NeuralNet:
         input_hidden = [None] * self.l
         input_hidden[0] = input_
         for i in range(self.l - 1):
-            input_hidden[i + 1] = np.maximum(0, FC.fwd(input_hidden[i], self.w[i]))
-        output = FC.fwd(input_hidden[-1], self.w[-1])
+            input_hidden[i + 1] = np.maximum(0, FC.fwd(input_hidden[i], self.w[i], self.b[i]))
+        output = FC.fwd(input_hidden[-1], self.w[-1], self.b[-1])
         return output, input_hidden
 
+<<<<<<< HEAD:bak/network.py
+=======
     def compute_loss(self, output, label):
         """
         given the output and true label,
@@ -47,28 +59,39 @@ class NeuralNet:
         d_output = prob
         d_output[np.arange(label.shape[0]), label] -= 1.0
         return loss, d_output
+>>>>>>> master:src/network.py
 
-    def compute_gradient(self, d_output, input_hidden):
+
+    def compute_gradient(self, g_output, input_hidden):
         """
         given the graident on output and data for hidden layer
         computer the gradient for hidden layer weights
         """
-        d_w_hidden = [None] * self.l
+        g_w_hidden = [None] * self.l
+        g_b_hidden = [None] * self.l
         for i in reversed(range(self.l)):
+<<<<<<< HEAD:bak/network.py
+            g_output, g_w_hidden[i], g_b_hidden[i] = FC.bwd(g_output, input_hidden[i], self.w[i])
+            g_output *= 1 * (input_hidden[i] > 0)
+=======
             d_output, d_w_hidden[i] = FC.bwd(d_output, input_hidden[i], self.w[i])
             d_output *= input_hidden[i] > 0
+>>>>>>> master:src/network.py
         # normalized the gradient by number of observations
-        for d_w in d_w_hidden:
-            d_w /= d_output.shape[0]
-        return d_w_hidden
+        for i in range(self.l):
+            g_w_hidden[i] /= g_output.shape[0]
+            g_b_hidden[i] /= g_output.shape[0]
 
-    def apply_graident(self, d_w, step_size=0.001, regularization=0):
+        return g_w_hidden, g_b_hidden
+
+    def apply_graident(self, g_w, g_b, step_size=0.001, regularization=0):
         """
         given gradient, apply gradient on weight with stepsize adjustment and
         regularization
         """
         for i in range(self.l):
-            self.w[i] -= (d_w[i] * step_size + self.w[i] * regularization)
+            self.w[i] -= (g_w[i] * step_size + self.w[i] * regularization)
+            self.b[i] -= (g_b[i] * step_size + self.b[i] * regularization)
 
     def train_iteration(self, data, label, debug=1):
         """
@@ -77,8 +100,14 @@ class NeuralNet:
         # forawrd feed, get y and x_hidden
         output, input_hidden = self.compute_output(data)
         # measure loss and gradient on y
-        loss, d_output = self.compute_loss(output, label)
+        loss, g_output = compute_loss(output, label)
         # backprop, get gradient on weight
+<<<<<<< HEAD:bak/network.py
+        g_w_hidden, g_b_hidden = self.compute_gradient(g_output, input_hidden)
+        if debug:
+            debugStr = 'w={0} \n xhidden={1} \n y={2} \n dy={3} \n dw={4}'.format(self.w, input_hidden, output, g_output, g_w_hidden)
+            print(debugStr)
+=======
         d_w_hidden = self.compute_gradient(d_output, input_hidden)
 
         if debug > 1:
@@ -87,8 +116,9 @@ class NeuralNet:
             print("y = ", output)
             print("dy = ", d_output)
             print("dw = ", d_w_hidden)
+>>>>>>> master:src/network.py
 
-        return output, loss, d_w_hidden
+        return output, loss, g_w_hidden, g_b_hidden
 
     def fit(self, data, label, iteration=10, step_size=0.001, regularization=0.0, test_pct=0.0, debug=1):
         """
@@ -99,9 +129,9 @@ class NeuralNet:
         d_train, l_train, d_test, l_test = train_test_split(data, label, test_pct)
         for t in range(iteration):
             # computer gradient on weight
-            output_train, loss_train, d_w = self.train_iteration(d_train, l_train, debug)
+            output_train, loss_train, d_w, d_b = self.train_iteration(d_train, l_train, debug)
             # apply gradient on weight
-            self.apply_graident(d_w, step_size, regularization)
+            self.apply_graident(d_w, d_b, step_size, regularization)
             # all book keeping
             output_test, _ = self.compute_output(d_test)
             avg_loss_train = np.mean(loss_train)
