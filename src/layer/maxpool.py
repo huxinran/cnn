@@ -24,37 +24,53 @@ class MaxPoolLayer(Layer):
                                input_shape[1] / self.kernel_shape[0], 
                                input_shape[2] / self.kernel_shape[1]), dtype=int)
         
-        self.indice = utils.flatten_index(self.input_shape, self.kernel_shape, (0, 0), self.kernel_shape)
+        self.indice = utils.flatten_index(self.input_shape, 
+                                          self.kernel_shape, 
+                                          self.pad, 
+                                          self.stride)
+
+        self.d_in = np.prod(self.input_shape, dtype=int)
+        self.d_out = np.prod(self.shape, dtype=int)
+        self.d_kernel = np.prod(self.kernel_shape, dtype=int)
+        self.max_indice = None
         return True
 
     def forward(self, x):
         N = x.shape[0]
-        y = np.zeros([N, self.shape[0] * self.shape[1] * self.shape[2]])
-        self.max_index = np.zeros([N, self.shape[0] * self.shape[1] * self.shape[2]], dtype=int)
+        
+        y = np.zeros([N, self.d_out])
+        
+        self.max_indice = np.zeros([N, self.d_out], dtype=int)
+        
         for i in range(N):
-            flat_x = utils.flatten(x[i,].reshape(self.input_shape), self.input_shape, self.kernel_shape, self.pad, self.stride)
-            flat_x = flat_x.reshape(-1, np.prod(self.kernel_shape, dtype=int))
-            max_index = np.argmax(flat_x, axis=1)
-            self.max_index[i,] = max_index 
-            yi = flat_x[np.arange(flat_x.shape[0]), max_index].reshape(-1, self.input_shape[0]).T.ravel()
-            y[i,] = yi.ravel()
+            flat_xi = utils.flatten(x[i,].reshape(self.input_shape), 
+                                   self.input_shape, 
+                                   self.kernel_shape, 
+                                   self.pad, 
+                                   self.stride, 
+                                   self.indice).reshape(-1, self.d_kernel)
+
+            self.max_indice[i, ] = np.argmax(flat_xi, axis=1)
+
+            y[i, ] = flat_xi[np.arange(self.d_out), self.max_indice[i, ]].reshape(-1, self.input_shape[0]).T.ravel()
         return y
 
     def backward(self, dy):
         N = dy.shape[0]
-        dx = np.zeros([N, self.input_shape[0], self.input_shape[1], self.input_shape[2]])
+        
+        dx = np.zeros([N, self.d_in])
+
         for i in range(N):
-            dyi = dy[i,].reshape(self.shape).transpose([1, 2, 0]).ravel()
-            dflat_x = np.zeros([np.prod(self.shape, dtype=int), np.prod(self.kernel_shape, dtype=int)])
-            row = np.arange(np.prod(self.shape, dtype=int))
-            dflat_x[np.arange(np.prod(self.shape, dtype=int)), self.max_index[i,]] = dyi
-            dxi = utils.unflatten(dflat_x, 
-                                 self.input_shape, 
-                                 self.kernel_shape, 
-                                 self.pad, 
-                                 self.stride, 
-                                 self.indice)
-            dx[i, :] = dxi
+            dflat_x = np.zeros([self.d_out, self.d_kernel])
+
+            dflat_x[np.arange(self.d_out), self.max_indice[i,]] = dy[i,].reshape(self.shape).transpose([1, 2, 0]).ravel()
+            
+            dx[i, ] = utils.unflatten(dflat_x, 
+                                      self.input_shape, 
+                                      self.kernel_shape, 
+                                      self.pad, 
+                                      self.stride, 
+                                      self.indice).ravel()
         return dx
     
     def learn(self, config):

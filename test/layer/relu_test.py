@@ -21,9 +21,10 @@ class TestReluLayer(unittest.TestCase):
         l = Relu()
         l.accept([2, 3])
 
-        x = np.array([[1, 2, 3], [-4, -5, -6]])
+        x = np.array([[1, 2, 3, 
+                      -4, -5, -6]])
         y = l.forward(x)
-        self.assertTrue(np.allclose(y, [[1, 2, 3], [0, 0, 0]]))
+        self.assertTrue(np.allclose(y, [[1, 2, 3, 0, 0, 0]]))
 
     def test_backward(self):
         l = Relu()
