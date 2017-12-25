@@ -4,7 +4,7 @@ import numpy as np
 import sys
 sys.path.append('C:\\Users\\Xinran\\Desktop\\cnn\\src\\')
 sys.path.append('C:\\Users\\Xinran\\Desktop\\cnn\\src\\layer\\')
-from conv_layer import ConvLayer as Conv
+from conv import ConvLayer as Conv
 
 class TestConvLayer(unittest.TestCase):
     def test_init(self):
@@ -14,7 +14,7 @@ class TestConvLayer(unittest.TestCase):
         self.assertEqual(l.depth_out, 2)
         self.assertEqual(l.pad, 0)
         self.assertEqual(l.stride, 1)
-        self.assertEqual(l.type, 'ConvLayer')
+        self.assertEqual(l.type, 'Convolution')
 
     def test_accept(self):
         l = Conv([2, 2], 2)
@@ -24,7 +24,7 @@ class TestConvLayer(unittest.TestCase):
         self.assertEqual(l.depth_out, 2)
         self.assertEqual(l.pad, 0)
         self.assertEqual(l.stride, 1)
-        self.assertEqual(l.type, 'ConvLayer')
+        self.assertEqual(l.type, 'Convolution')
 
     def test_forward(self):
 
@@ -61,13 +61,13 @@ class TestConvLayer(unittest.TestCase):
         l.accept([1, 3, 3])
         
         l.w = np.array([
-            [1, 0],
+            [1.0, 0],
             [0, 0],
             [0, 0],
             [0, 1]
         ])
 
-        l.b = np.array([0.0, 0.1])
+        l.b = np.array([[0.0, 0.1]])
         
         l.flat_x = np.array([[
             [1, 2, 3, 4],
@@ -80,22 +80,22 @@ class TestConvLayer(unittest.TestCase):
             [1, 2, 3, 4, -4, -3, -2, -1],
         ])
 
-        dx, dw, db = l.backward(dy)
+        dx = l.backward(dy)
 
         dx_true = np.array([[1, 2, 0, 3, 0, -3, 0, -2, -1]])
 
-        dw_true = np.array([
+        w_true = np.array([
             [210, -110],
             [220, -120],
             [230, -130],
             [240, -140]
         ])
 
-        db_true = np.array([10, -10])
+        b_true = np.array([10, -10])
 
-        self.assertTrue((dx == dx_true).all())
-        self.assertTrue((dw == dw_true).all())
-        self.assertTrue((db == db_true).all())
+        self.assertTrue(np.allclose(dx, dx_true))
+        self.assertTrue(np.allclose(l.w, w_true))
+        self.assertTrue(np.allclose(l.b, b_true))
 
 
     def test_repr(self):

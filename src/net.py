@@ -3,33 +3,33 @@ import numpy as np
 import sys
 sys.path.append('C:\\Users\\Xinran\\Desktop\\cnn\\src\\')
 import utils
+
 class Net:
     def __init__(self, shape):
         self.shape = shape 
         self.layer = []
         
     def __repr__(self):
-        return str(self.layer)
-
+        return '/n'.join(['Layer {0} : {1}'.format(i, str(l)) for i, l in enumerate(self.layer)])
+        
     def add_layer(self, layer):
-        if layer.accept(self.shape) is True:
+        if layer.accept(self.shape):
             self.shape = layer.shape
             self.layer.append(layer)
             return self
         else:
-            raise(1)
-
+            raise Exception('Could not add {0} to the model'.format(layer))
 
     def forward(self, x):
         y = x
-        for layer in self.layer:
-            y = layer.forward(y)
+        for l in self.layer:
+            y = l.forward(y)
         return y
 
     def backward(self, dy):
         dx = dy
-        for layer in reversed(self.layer):
-            dx = layer.backward(dx)
+        for l in reversed(self.layer):
+            dx = l.backward(dx)
 
     def evaluate(self, y, y_true):
         p = utils.softmax(y)
@@ -53,11 +53,14 @@ class Net:
         start = time.time()
 
         print('Training started...')
+        
         for t in range(iteration):
             loss = self.train_one_iteration(x, y)
             
             msg = self.book_keeping_loss(loss)
             
             time_remain = (time.time() - start) / (t + 1) * (iteration - t- 1)
+
             print('Iter  {0:4d} | Time Remain: {1:4.2f} | {2}'.format(t, time_remain, msg), end='\r')  
+        
         print('Training finished. took {0:4.2f} s'.format(time.time() - start))
