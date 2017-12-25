@@ -29,7 +29,7 @@ class TestMaxPoolLayer(unittest.TestCase):
     def test_backward(self):
         l = MaxPool()
         l.accept([2, 4, 4])
-        x = np.arange(32).reshape(1, 2, 4, 4)
+        x = np.arange(32).reshape(1, 32)
         y = l.forward(x)
         
         dy = np.array([[[[1, 1], 
@@ -38,18 +38,17 @@ class TestMaxPoolLayer(unittest.TestCase):
                         [2, 2]]]])
         dx = l.backward(dy)
 
-        self.assertTrue(np.allclose(dx, [[[0, 0, 0, 0],
-                                          [0, 1, 0, 1],
-                                          [0, 0, 0, 0],
-                                          [0, 1, 0, 1]], 
-                                         [[0, 0, 0, 0],
-                                          [0, 2, 0, 2],
-                                          [0, 0, 0, 0],
-                                          [0, 2, 0, 2]]]))
+        self.assertTrue(np.allclose(dx, [[0, 0, 0, 0,
+                                          0, 1, 0, 1,
+                                          0, 0, 0, 0,
+                                          0, 1, 0, 1, 
+                                          0, 0, 0, 0,
+                                          0, 2, 0, 2,
+                                          0, 0, 0, 0,
+                                          0, 2, 0, 2]]))
 
     def test_repr(self):
         l = MaxPool()
-        print(l)
     
 if __name__ == "__main__":
     unittest.main()
