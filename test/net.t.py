@@ -3,6 +3,7 @@ import numpy as np
 
 import sys
 sys.path.append('C:\\Users\\Xinran\\Desktop\\cnn\\src\\')
+sys.path.append('C:\\Users\\Xinran\\Desktop\\cnn\\src\\layers')
 
 from net import Net
 from fc_layer import FullyConnectedLayer as FC

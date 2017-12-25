@@ -3,8 +3,8 @@ main
 """
 import numpy as np
 import matplotlib.pyplot as plt
-from src.network import NeuralNet
-from src.utils import mnist
+from src.net import Net
+from data.data import mnist
 plt.ion()
 
 
@@ -24,10 +24,7 @@ def main():
     regularization = 0.0001
     debug = False
     np.random.seed(4)
-    net = NeuralNet([din, dhidden, dout])
-    # magic happens
-    net.fit(data, label, iteration, step_size, regularization, debug=debug, test_pct=0.001)
-    return
+
 
 if __name__ == "__main__":
     main()

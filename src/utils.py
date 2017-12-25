@@ -99,19 +99,15 @@ def flatten(img, kernel_shape, pad, stride):
     ith row of col is pixel of the ith patch arranged by [d, h, w] order  
     '''
     N, depth_in, height_in, width_in = img.shape
-    
     height_k, width_k = kernel_shape
 
     padded_img = pad_img(img, pad)
-
     k, i, j = flatten_index([depth_in, height_in, width_in], 
                             [height_k, width_k], 
                             pad, 
                             stride)
     
-    patch = padded_img[:, k, i, j]
-
-    return patch.reshape([N, -1, depth_in * height_k * width_k])
+    return padded_img[:, k, i, j].reshape([N, -1, depth_in * height_k * width_k])
 
 def unflatten(patch, img_shape, kernel_shape, pad, stride):
     '''

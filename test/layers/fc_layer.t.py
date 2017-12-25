@@ -42,7 +42,6 @@ class TestFCLayer(unittest.TestCase):
         self.assertTrue(np.allclose(dw, [[-3, 9], [-3, 12], [-3, 15]]))
         self.assertTrue(np.allclose(db, [0, 3]))
 
-
     def test_repr(self):
         l = FullyConnectedLayer([10])
         pass
