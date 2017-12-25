@@ -56,4 +56,8 @@ class FullyConnectedLayer(Layer):
 
     def backward(self, dy):
         dx, dw, db = utils.backward(dy, self.x, self.w)
-        return dx, dw, db
+        
+        self.w -= dw
+        self.b -= db
+
+        return dx

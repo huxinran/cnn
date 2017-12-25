@@ -69,12 +69,12 @@ class TestConvLayer(unittest.TestCase):
 
         l.b = np.array([0.0, 0.1])
         
-        l.xcol = np.array([
+        l.flat_x = np.array([[
             [1, 2, 3, 4],
             [11, 12, 13, 14],
             [21, 22, 23, 24],
             [31, 32, 33, 34]
-        ])
+        ]])
 
         dy = np.array([
             [1, 2, 3, 4, -4, -3, -2, -1],
@@ -82,11 +82,7 @@ class TestConvLayer(unittest.TestCase):
 
         dx, dw, db = l.backward(dy)
 
-        dx_true = np.array([[[
-            [1, 2, 0],
-            [3, 0, -3], 
-            [0, -2, -1]
-        ]]])
+        dx_true = np.array([[1, 2, 0, 3, 0, -3, 0, -2, -1]])
 
         dw_true = np.array([
             [210, -110],

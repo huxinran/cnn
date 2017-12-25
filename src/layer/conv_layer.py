@@ -40,7 +40,7 @@ class ConvLayer(Layer):
         
         self.w = np.random.normal(0, 1, [self.kernel_len, self.depth_out])
         self.b = np.random.normal(0, 1, [1, self.depth_out])
-        self.patches = None
+        self.flat_x = None
         return True 
 
     def forward(self, x):
@@ -55,33 +55,48 @@ class ConvLayer(Layer):
         than transpose and ravel to make it 2-d
 
         '''
-        x = x.reshape(-1, self.depth_in, self.height_in, self.width_in)
+        N = x.shape[0]
 
-        N, depth_in, height_in, width_in = x.shape
-
-        patch = utils.flatten(x, [self.height_k, self.width_k], self.pad, self.stride)        
+        x = x.reshape(N, self.depth_in, self.height_in, self.width_in)
         
-        self.xpatch = patch.reshape(N * self.height_out * self.width_out, -1)
-                
-        ycol = utils.forward(self.xpatch, self.w, self.b)
+        y = np.zeros([N, self.depth_out * self.height_out * self.width_out]) 
+        
+        self.flat_x = np.zeros([N, self.height_out * self.width_out, self.height_k * self.width_k])
 
-        y = np.array(np.split(ycol, N)).transpose(0, 2, 1).reshape(N, -1)
+        for i in range(N):
+            xi = x[i, :].reshape(self.depth_in, self.height_in, self.width_in)
+            self.flat_x[i, :, :] = utils.flatten(xi, 
+                                    [self.depth_in, self.height_in, self.width_in],
+                                    [self.height_k, self.width_k], 
+                                    self.pad, 
+                                    self.stride) 
+
+            y[i, :] = utils.forward(self.flat_x[i, :, :], self.w, self.b).T.ravel()
         
         return y
 
     def backward(self, dy):
         N = dy.shape[0]
 
-        dy = dy.reshape(N, self.depth_out, -1).transpose(0, 2, 1).reshape(-1, self.depth_out)
+        dx = np.zeros([N, self.depth_in * self.height_in * self.width_in])
+        dw = np.zeros([self.height_k * self.width_k, self.depth_out])
+
+        db = np.zeros([1, self.depth_out])
+        for i in range(N):
+            dyi = dy[i, :].reshape(self.depth_out, -1).T
+
+            dflat_xi, dwi, dbi = utils.backward(dyi, self.flat_x[i, ], self.w)
+
+            dxi = utils.unflatten(dflat_xi, 
+                                        [self.depth_in, self.height_in, self.width_in],
+                                        [self.height_k, self.width_k], 
+                                        self.pad, 
+                                        self.stride) 
+            dx[i,] = dxi.ravel()
+            dw += dwi
+            db += dbi
         
-        dpatch, dw, db = utils.backward(dy, self.xcol, self.w)
+        self.w -= dw
+        self.b -= db
 
-        dpatch = dpatch.reshape([N, self.height_out * self.width_out, -1])
-
-
-        dx = utils.unflatten(dpatch, 
-                             [N, self.depth_in, self.height_in, self.width_in],
-                             [self.height_k, self.width_k],
-                             self.pad, 
-                             self.stride)
-        return dx, dw, db
+        return dx

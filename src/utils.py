@@ -56,7 +56,7 @@ def pad_img(img, pad):
     if pad == 0:
         return img
     elif pad > 0:
-        return np.pad(img, [(0, 0), (0, 0), (pad, pad), (pad, pad)], 'constant')
+        return np.pad(img, ((0, 0), (pad, pad), (pad, pad)), 'constant')
 
 def unpad_img(padded_img, pad):
     '''
@@ -65,66 +65,60 @@ def unpad_img(padded_img, pad):
     if pad == 0:
         return padded_img
     else:
-        return img[:, :, pad:-pad, pad:-pad]
+        return img[:, pad:-pad, pad:-pad]
 
-def flatten_index(input_shape, kernel_shape, pad=0, stride=1):
+def flatten_index(img_shape, kernel_shape, pad=0, stride=1):
     '''
     used to vectorize flatten
     '''
-    din, hin, win = input_shape
-    hk, wk = kernel_shape    
+    depth_img, height_img, width_img = img_shape
+    height_k, width_k = kernel_shape    
     
-    k, i, j = np.meshgrid(np.arange(din), 
-                          np.arange(hk), 
-                          np.arange(wk), 
+    k, i, j = np.meshgrid(np.arange(depth_img), 
+                          np.arange(height_k), 
+                          np.arange(width_k), 
                           indexing='ij')
 
-    i_pos = get_pos(hin, hk, pad, stride)
-    j_pos = get_pos(win, wk, pad, stride)
+    i_pos = get_pos(height_img, height_k, pad, stride)
+    j_pos = get_pos(width_img, width_k, pad, stride)
     
     i_base, j_base = np.meshgrid(i_pos, j_pos, indexing='ij')
     
-    i = np.tile(i.ravel(), i_pos.size * j_pos.size) + np.repeat(i_base.ravel(), din * hk * wk)
-    
-    j = np.tile(j.ravel(), i_pos.size * j_pos.size) + np.repeat(j_base.ravel(), din * hk * wk)
-    
+    i = np.tile(i.ravel(), i_pos.size * j_pos.size) + np.repeat(i_base.ravel(), depth_img * height_k * width_k)
+    j = np.tile(j.ravel(), i_pos.size * j_pos.size) + np.repeat(j_base.ravel(), depth_img * height_k * width_k)
     k = np.tile(k.ravel(), i_pos.size * j_pos.size)
     return (k, i, j)
 
-def flatten(img, kernel_shape, pad, stride):
+def flatten(img, img_shape, kernel_shape, pad, stride):
     '''
     this will flatten a 3-d img into a 2-d array of patches
     ith row of col is pixel of the ith patch arranged by [d, h, w] order  
     '''
-    N, depth_in, height_in, width_in = img.shape
-    height_k, width_k = kernel_shape
+
 
     padded_img = pad_img(img, pad)
-    k, i, j = flatten_index([depth_in, height_in, width_in], 
-                            [height_k, width_k], 
-                            pad, 
-                            stride)
     
-    return padded_img[:, k, i, j].reshape([N, -1, depth_in * height_k * width_k])
+    k, i, j = flatten_index(img_shape, kernel_shape, pad, stride)
+    
+    depth_img, height_img, width_img = img.shape
+    
+    height_k, width_k = kernel_shape
+
+    return padded_img[k, i, j].reshape(-1, depth_img * height_k * width_k)
 
 def unflatten(patch, img_shape, kernel_shape, pad, stride):
     '''
     unflatten 2-d array into a a 3-d img 
     ith row of col is pixel of the ith patch arranged by [d, h, w] order  
     '''
-    N, depth_img, height_img, width_img = img_shape
-
-    patch = patch.reshape([N, -1])
-
+    
     padded_img = pad_img(np.zeros(img_shape), pad)
 
-    k, i, j = flatten_index(img_shape[1:], kernel_shape, pad, stride)
-    
-    np.add.at(padded_img, (slice(None), k, i, j), patch)
+    k, i, j = flatten_index(img_shape, kernel_shape, pad, stride)
 
-    img = unpad_img(padded_img, pad)
+    np.add.at(padded_img, (k, i, j), patch.ravel())
 
-    return img
+    return unpad_img(padded_img, pad)
 
 
 def split(data, label, pct=0.0):

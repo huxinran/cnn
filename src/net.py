@@ -17,7 +17,7 @@ class Net:
             self.layer.append(layer)
             return self
         else:
-            return None
+            raise(1)
 
 
     def forward(self, x):
@@ -29,9 +29,7 @@ class Net:
     def backward(self, dy):
         dx = dy
         for layer in reversed(self.layer):
-            dx, dw, db = layer.backward(dx)
-            layer.w -= dw
-            layer.b -= db
+            dx = layer.backward(dx)
 
     def evaluate(self, y, y_true):
         p = utils.softmax(y)
