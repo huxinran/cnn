@@ -20,13 +20,21 @@ def main():
     """
     
     (data, label) = mnist()
+<<<<<<< HEAD
     data = np.array(data)[0:100, ]
     label = np.array(label)[0:100, ]
+=======
+    data = np.array(data)
+    label = np.array(label)
+
+>>>>>>> master
     din = data[0].size
     dhidden = 100
     dout = np.unique(label).size
+    
     step_size = 1
     iteration = 1000
+<<<<<<< HEAD
     regularization = 0.0001
     debug = False
     np.random.seed(42)
@@ -43,6 +51,16 @@ def main():
     print(n)
     n.fit(data, label, 20)
 
+=======
+    regularization = 0.0
+    debug = 0
+    
+    net = NeuralNet([din, dhidden, 100, dout])
+    # magic happens
+    net.fit(data, label, iteration, step_size, regularization, debug=debug, test_pct=0.001)
+    
+    return
+>>>>>>> master
 
 if __name__ == "__main__":
     main()

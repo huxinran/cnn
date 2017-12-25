@@ -21,12 +21,19 @@ class NeuralNet:
         [din,       dh1, dh2, ..., dhk, dout]
          input -> | hidden layers    | -> output
         '''
+<<<<<<< HEAD:bak/network.py
         self.dim = dim
         self.l = len(self.dim) - 1
         self.w = [None] * self.l
         self.b = [None] * self.l
         for i in range(self.l):
             self.w[i], self.b[i] = FC.init_weight(self.dim[i], self.dim[i + 1])
+=======
+        self.w = []
+        for i in range(len(dim) - 1):
+            self.w.append(FC.init_weight(dim[i], dim[i + 1]))
+        self.l = len(dim) - 1
+>>>>>>> master:src/network.py
 
     def compute_output(self, input_):
         """
@@ -40,6 +47,19 @@ class NeuralNet:
         output = FC.fwd(input_hidden[-1], self.w[-1], self.b[-1])
         return output, input_hidden
 
+<<<<<<< HEAD:bak/network.py
+=======
+    def compute_loss(self, output, label):
+        """
+        given the output and true label,
+        return softmax cross entropy loss and gradient on output
+        """
+        prob = softmax(output)
+        loss = -np.log(np.maximum(np.exp(-10), prob[np.arange(label.shape[0]), label]))
+        d_output = prob
+        d_output[np.arange(label.shape[0]), label] -= 1.0
+        return loss, d_output
+>>>>>>> master:src/network.py
 
 
     def compute_gradient(self, g_output, input_hidden):
@@ -50,8 +70,13 @@ class NeuralNet:
         g_w_hidden = [None] * self.l
         g_b_hidden = [None] * self.l
         for i in reversed(range(self.l)):
+<<<<<<< HEAD:bak/network.py
             g_output, g_w_hidden[i], g_b_hidden[i] = FC.bwd(g_output, input_hidden[i], self.w[i])
             g_output *= 1 * (input_hidden[i] > 0)
+=======
+            d_output, d_w_hidden[i] = FC.bwd(d_output, input_hidden[i], self.w[i])
+            d_output *= input_hidden[i] > 0
+>>>>>>> master:src/network.py
         # normalized the gradient by number of observations
         for i in range(self.l):
             g_w_hidden[i] /= g_output.shape[0]
@@ -68,7 +93,7 @@ class NeuralNet:
             self.w[i] -= (g_w[i] * step_size + self.w[i] * regularization)
             self.b[i] -= (g_b[i] * step_size + self.b[i] * regularization)
 
-    def train_iteration(self, data, label, debug=False):
+    def train_iteration(self, data, label, debug=1):
         """
         one iteration of learning
         """
@@ -77,14 +102,25 @@ class NeuralNet:
         # measure loss and gradient on y
         loss, g_output = compute_loss(output, label)
         # backprop, get gradient on weight
+<<<<<<< HEAD:bak/network.py
         g_w_hidden, g_b_hidden = self.compute_gradient(g_output, input_hidden)
         if debug:
             debugStr = 'w={0} \n xhidden={1} \n y={2} \n dy={3} \n dw={4}'.format(self.w, input_hidden, output, g_output, g_w_hidden)
             print(debugStr)
+=======
+        d_w_hidden = self.compute_gradient(d_output, input_hidden)
+
+        if debug > 1:
+            print('w = ', self.w)
+            print("xhidden = ", input_hidden)
+            print("y = ", output)
+            print("dy = ", d_output)
+            print("dw = ", d_w_hidden)
+>>>>>>> master:src/network.py
 
         return output, loss, g_w_hidden, g_b_hidden
 
-    def fit(self, data, label, iteration=10, step_size=0.001, regularization=0.0, test_pct=0.0, debug=False):
+    def fit(self, data, label, iteration=10, step_size=0.001, regularization=0.0, test_pct=0.0, debug=1):
         """
         fit base on data and label
         """
@@ -102,7 +138,9 @@ class NeuralNet:
             err_rate_train = np.mean(1 * (np.argmax(output_train, axis=1) != l_train))
             err_rate_test = np.mean(1 * (np.argmax(output_test, axis=1) != l_test))
             time_remain = (time.time() - start) / (t + 1) * (iteration - t - 1)
-            debug_str = 'Iter:{0:4d} | Time:{1:4.4f} | TrainErr:{2:4.4f} | Test Err:{3:4.4f} | Loss:{4:4.4f}'.format(t, time_remain, err_rate_train, err_rate_test, avg_loss_train)
-            print(debug_str, end='\r')
+            
+            if debug >= 0:
+                debug_str = 'Iter:{0:4d} | Time:{1:4.2f} | TrainErr:{2:4.2f} | Test Err:{3:4.2f} | Loss:{4:4.2f}'.format(t, time_remain, err_rate_train, err_rate_test, avg_loss_train)
+                print(debug_str, end='\r')
 
         print('\n\nTime total : {0}'.format(time.time() - start))
