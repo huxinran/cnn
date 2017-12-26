@@ -36,11 +36,13 @@ class ConvLayer(Layer):
         self.dim_k = self.dk * self.hk * self.wk
         
         # params
-        self.w = np.random.normal(0, 1, [self.dim_k, self.dout])
-        self.b = np.random.normal(0, 1, [1, self.dout])
+        self.w = np.random.normal(0, 1.0 / np.sqrt(self.dim_k), [self.dim_k, self.dout])
+        self.b = np.random.normal(0, 1.0 / np.sqrt(self.dim_k), [1, self.dout])
         
         # cache
         self.fx = None
+        self.dw_m = np.zeros([self.dim_k, self.dout])
+        self.db_m = np.zeros([1, self.dout])
         self.dw = None
         self.db = None
         
@@ -52,7 +54,7 @@ class ConvLayer(Layer):
         N = x.shape[0]
         y = np.zeros((N, self.dim_out)) 
 
-        self.fx = np.zeros((N, self.hout * self.wout, self.hk * self.wk))
+        self.fx = np.zeros((N, self.hout * self.wout, self.dim_k))
         
         for i in range(N):
             self.fx[i,] = utils.flatten(x[i, :].reshape(self.shape_in),
@@ -67,7 +69,7 @@ class ConvLayer(Layer):
     def backward(self, dy):
         N = dy.shape[0]
         dx = np.zeros([N, self.dim_in])
-        dw = np.zeros([self.hk * self.wk, self.dout])
+        dw = np.zeros([self.dim_k, self.dout])
         db = np.zeros([1, self.dout])
 
         for i in range(N):
@@ -84,10 +86,12 @@ class ConvLayer(Layer):
             dw += dwi
             db += dbi
 
-        self.dw = dw / N
-        self.db = db / N
+        self.dw = dw
+        self.db = db 
         return dx
     
-    def learn(self, config):
-        self.w -= config['step_size'] * self.dw
-        self.b -= config['step_size'] * self.db
+    def update(self, config):
+        self.dw_m = utils.compute_momentum(self.dw_m, self.dw, config)
+        self.db_m = utils.compute_momentum(self.db_m, self.db, config)
+        self.w += self.dw_m
+        self.b += self.db_m

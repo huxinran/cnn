@@ -46,6 +46,10 @@ def backward(dy, x, w):
     db = np.sum(dy, axis=0)
     return dx, dw, db
 
+def compute_momentum(v, dw, config):
+    return v * config['mu'] - dw * config['step_size']
+
+
 def pad_img(img, pad):
     '''
     pad img with zeros
@@ -128,5 +132,8 @@ def normalize(data):
     """
     normalize data
     """
-    data = data - np.mean(data, axis=0)
+    data -= np.mean(data, axis=0)
+    data /= np.sqrt(np.var(data, axis=0)) 
     return data
+
+

@@ -31,9 +31,9 @@ class Net:
         for l in reversed(self.layer):
             dx = l.backward(dx)
 
-    def learn(self, config):
+    def update(self, config):
         for l in self.layer:
-            l.learn(config)
+            l.update(config)
 
     def evaluate(self, y, y_true):
         p = utils.softmax(y)
@@ -47,14 +47,15 @@ class Net:
         self.backward(dy)
 
         config = {
-            'step_size' : 0.1
+            'step_size' : 0.00001
+          , 'mu'        : 0.9
         }
-        self.learn(config)
+        self.update(config)
 
-        return loss
+        return loss, y
 
     def book_keeping_loss(self, loss):
-        avg_loss = np.mean(loss)
+        avg_loss = np.mean(loss) 
         return 'avg Loss = {0:4.2f}'.format(avg_loss) 
 
     def fit(self, x, y, iteration):
@@ -64,12 +65,14 @@ class Net:
         print('Training started...')
         
         for t in range(iteration):
-            loss = self.train_one_iteration(x, y)
-            
+            loss, yfit = self.train_one_iteration(x, y)
+            #print(loss)
             msg = self.book_keeping_loss(loss)
+            
+            err = np.mean(1 * (np.argmax(yfit, axis=1) != y))
             
             time_remain = (time.time() - start) / (t + 1) * (iteration - t- 1)
 
-            print('Iter  {0:4d} | Time Remain: {1:4.2f} | {2}'.format(t, time_remain, msg), end='\r')  
+            print('Iter  {0:4d} | Time Remain: {1:4.2f} | {2} | {3}'.format(t, time_remain, msg, err))  
         
         print('Training finished. took {0:4.2f} s'.format(time.time() - start))

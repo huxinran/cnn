@@ -20,5 +20,5 @@ class ReluLayer(Layer):
     def backward(self, dy):
         return dy * (1 * self.x > 0)
     
-    def learn(self, config):
+    def update(self, config):
         return

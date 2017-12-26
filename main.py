@@ -5,6 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from src.net import Net
 from data.data import mnist
+from data.data import cifar
+
 import sys
 sys.path.append('C:\\Users\\Xinran\\Desktop\\cnn\\src\\')
 sys.path.append('C:\\Users\\Xinran\\Desktop\\cnn\\src\\layer')
@@ -14,16 +16,21 @@ from fc import FullyConnectedLayer as FC
 from conv import ConvLayer as Conv
 from relu import ReluLayer as Relu
 from maxpool import MaxPoolLayer as MaxPool
-
+from utils import normalize
 
 def main():
     """
     main func
     """
     
-    (data, label) = mnist()
-    data = np.array(data)[0:1000, ]
-    label = np.array(label)[0:1000, ]
+    (data, label) = cifar()
+    print(data.shape)
+
+    data = np.array(data, dtype=float)
+    label = np.array(label)
+    
+    data = normalize(data)
+    print(data.shape)
     din = data[0].size
     dhidden = 100
     dout = np.unique(label).size
@@ -34,8 +41,8 @@ def main():
     debug = False
     np.random.seed(42)
 
-    n = Net([1, 28, 28])
-    conv = Conv([3, 3], 6)
+    n = Net([3, 32, 32])
+    conv = Conv([3, 3], 20)
     relu = Relu()
     pool = MaxPool()
     fc = FC([10])
@@ -46,7 +53,7 @@ def main():
     n.add(fc)
     
     print(n)
-    n.fit(data, label, 20)
+    n.fit(data, label, 200)
 
 
 if __name__ == "__main__":
