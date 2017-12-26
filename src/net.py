@@ -47,7 +47,7 @@ class Net:
         self.backward(dy)
 
         config = {
-            'step_size' : 0.00001
+            'step_size' : 0.000001
           , 'mu'        : 0.9
         }
         self.update(config)
