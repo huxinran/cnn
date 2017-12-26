@@ -4,15 +4,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class ConvLayer(Layer):
-    def __init__(self, shape_k, dout, pad=0, stride=1):        
+    def __init__(self, config):        
         super(ConvLayer, self).__init__()
         self.type = 'Convolution'
-        self.shape_k = shape_k
+        self.config = config
+        self.shape_k = config['kernel_shape']
+        self.dout = config['output_depth']
+        self.pad = config['pad']
+        self.stride = config['stride']
         self.hk, self.wk = self.shape_k
-        self.dout = dout
-        self.pad = (pad, pad)
-        self.stride = (stride, stride)
-
+        
     def accept(self, shape_in):
         if (shape_in[1] + 2 * self.pad[0] - self.hk + 1) % self.stride[0] != 0:
             return False
@@ -42,11 +43,10 @@ class ConvLayer(Layer):
         
         # cache
         self.fx = None
-        self.dw_m = np.zeros([self.dim_k, self.dout])
-        self.db_m = np.zeros([1, self.dout])
-        self.dw = None
-        self.db = None
-        self.qq = 1
+        self.dw = np.zeros([self.dim_k, self.dout])
+        self.db = np.zeros([1, self.dout])
+        self.dw_cache = None
+        self.db_cache = None
         return True 
 
     def forward(self, x):
@@ -87,12 +87,12 @@ class ConvLayer(Layer):
             dw += dwi
             db += dbi
 
-        self.dw = dw
-        self.db = db 
+        self.dw_cache = dw
+        self.db_cache = db 
         return dx
     
-    def update(self, config):
-        self.dw_m = utils.compute_momentum(self.dw_m, self.dw, config)
-        self.db_m = utils.compute_momentum(self.db_m, self.db, config)
+    def update(self):
+        self.dw = utils.compute_momentum(self.dw, self.dw_cache, self.config)
+        self.db = utils.compute_momentum(self.db, self.db_cache, self.config)
         self.w += self.dw_m
         self.b += self.db_m

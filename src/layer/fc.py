@@ -32,15 +32,16 @@ class FullyConnectedLayer(Layer):
     Fully Connected Layer Class represents a general function f(x, w) = y
     it provides 3 utility functions
     '''
-
-    
-    def __init__(self, shape):
+    def __init__(self, config):
         super(FullyConnectedLayer, self).__init__()
         self.type = 'FullyConnected'
-        self.shape = shape
+        self.config = config
+        self.shape = config['shape']
         self.dim_out = np.prod(self.shape, dtype=int)
 
     def accept(self, shape_in):
+        
+
         self.shape_in = shape_in
         self.dim_in = np.prod(self.shape_in, dtype=int)
         
