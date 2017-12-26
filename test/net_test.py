@@ -24,7 +24,6 @@ class TestNet(unittest.TestCase):
         x = np.random.random([1, 3, 5, 5]).reshape(1, -1)
         y = np.array([0])
         loss = n.train_one_iteration(x, y)
-        print(loss)
     
     def test_fit(self):
         n = Net(np.array([3, 5, 5]))

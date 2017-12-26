@@ -1,6 +1,7 @@
 from layer import Layer 
 import utils
 import numpy as np
+import matplotlib.pyplot as plt
 
 class ConvLayer(Layer):
     def __init__(self, shape_k, dout, pad=0, stride=1):        
@@ -45,7 +46,7 @@ class ConvLayer(Layer):
         self.db_m = np.zeros([1, self.dout])
         self.dw = None
         self.db = None
-        
+        self.qq = 1
         return True 
 
     def forward(self, x):

@@ -17,6 +17,7 @@ from conv import ConvLayer as Conv
 from relu import ReluLayer as Relu
 from maxpool import MaxPoolLayer as MaxPool
 from utils import normalize
+from utils import plot_color
 
 def main():
     """
@@ -24,36 +25,34 @@ def main():
     """
     
     (data, label) = cifar()
-    print(data.shape)
+    N = 10000
+    data = np.array(data, dtype=float)[:N,]
+    label = np.array(label)[:N,]
 
-    data = np.array(data, dtype=float)
-    label = np.array(label)
-    
     data = normalize(data)
-    print(data.shape)
-    din = data[0].size
-    dhidden = 100
-    dout = np.unique(label).size
-    
-    step_size = 1
-    iteration = 1000
-    regularization = 0.0001
-    debug = False
-    np.random.seed(42)
 
-    n = Net([3, 32, 32])
-    conv = Conv([3, 3], 20)
-    relu = Relu()
+    config = {
+        'input_shape' : [3, 32, 32]
+      , 'mu' : 0.9
+      , 'step_size' : 0.000001
+      , 'step_decay' : 0.95
+    }
+
+    nn = Net(config)
+    conv1 = Conv([3, 3], 6)
+    relu1 = Relu()
+    conv2 = Conv([3, 3], 32)
+    relu2 = Relu()
     pool = MaxPool()
     fc = FC([10])
 
-    n.add(conv)
-    n.add(relu)
-    n.add(pool)
-    n.add(fc)
+    nn.add(conv1)
+    nn.add(relu1)
+    nn.add(pool)
+    nn.add(fc)
     
-    print(n)
-    n.fit(data, label, 200)
+    print(nn)
+    nn.fit(data, label, 200)
 
 
 if __name__ == "__main__":
