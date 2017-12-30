@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from src.net import Net
 from data.data import mnist
 from data.data import cifar
-
+from data.data import getty
 import sys
 sys.path.append('C:\\Users\\Xinran\\Desktop\\cnn\\src\\')
 sys.path.append('C:\\Users\\Xinran\\Desktop\\cnn\\src\\layer')
@@ -16,6 +16,9 @@ from fc import FullyConnectedLayer as FC
 from conv import ConvLayer as Conv
 from relu import ReluLayer as Relu
 from maxpool import MaxPoolLayer as MaxPool
+from rnn import RNNLayer as RNN
+from rnn import compute_rnn_loss 
+
 from utils import normalize
 from utils import plot_color
 
@@ -24,6 +27,33 @@ def main():
     main func
     """
     
+    text, x, y, char2idx, idx2char = getty()
+    T = 20
+    
+    config = {
+        'dim_hidden' : 300
+      , 'l' : T
+      , 'clip' : 5
+      , 'mu' : 0.9
+      , 'step_size' : 0.001
+    }
+
+    np.random.seed(42)
+    r = RNN(config)
+    r.accept([27])
+    
+   
+
+    ttb = r.sample('f', char2idx, idx2char)
+    r.fit(x, y, 100)
+    tta = r.sample('f', char2idx, idx2char)
+    print(ttb)
+    print(tta)
+    return 
+
+
+
+
     (data, label) = cifar()
     N = 10000
     data = np.array(data, dtype=float)[:N,]
