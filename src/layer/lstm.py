@@ -2,10 +2,10 @@ from layer import Layer
 import utils
 import numpy as np
 
-class RNNLayer(Layer):
+class LSTMLayer(Layer):
     def __init__(self, config):
-        super(RNNLayer, self).__init__()
-        self.type = 'RNN'
+        super(LSTMLayer, self).__init__()
+        self.type = 'LSTM'
         self.config = config
         self.dim_hidden = config['dim_hidden']
         self.l = config['l']
@@ -18,8 +18,21 @@ class RNNLayer(Layer):
         self.dim_out = np.prod(self.shape, dtype=int)
         # param 
         self.s0 = np.zeros([1, self.dim_hidden])
-        self.U = np.random.normal(0, 1 / np.sqrt(self.dim_in), [self.dim_in, self.dim_hidden])
-        self.W = np.random.normal(0, 1 / np.sqrt(self.dim_hidden), [self.dim_hidden, self.dim_hidden])
+
+        self.Uf = np.random.normal(0, 1 / np.sqrt(self.dim_in), [self.dim_in, self.dim_hidden])
+        self.Wf = np.random.normal(0, 1 / np.sqrt(self.dim_hidden), [self.dim_hidden, self.dim_hidden])
+
+        self.Ui = np.random.normal(0, 1 / np.sqrt(self.dim_in), [self.dim_in, self.dim_hidden])
+        self.Wi = np.random.normal(0, 1 / np.sqrt(self.dim_hidden), [self.dim_hidden, self.dim_hidden])
+        
+        self.Uc = np.random.normal(0, 1 / np.sqrt(self.dim_in), [self.dim_in, self.dim_hidden])
+        self.Wc = np.random.normal(0, 1 / np.sqrt(self.dim_hidden), [self.dim_hidden, self.dim_hidden])
+        
+        self.Uo = np.random.normal(0, 1 / np.sqrt(self.dim_in), [self.dim_in, self.dim_hidden])
+        self.Wo = np.random.normal(0, 1 / np.sqrt(self.dim_hidden), [self.dim_hidden, self.dim_hidden])
+
+
+        
         self.V = np.random.normal(0, 1 / np.sqrt(self.dim_hidden), [self.dim_hidden, self.dim_out])
         self.by = np.random.normal(0, 1 / np.sqrt(self.dim_out), [1, self.dim_out])
 
@@ -51,28 +64,36 @@ class RNNLayer(Layer):
     
     def forward(self, x):
         self.x = [None] * self.l
+        self.f = [None] * self.l
+        self.i = [None] * self.l
+        self.o = [None] * self.l
+        self.c = [None] * self.l
+        self.hc = [None] * self.l
         self.h = [None] * self.l
         self.s = [None] * self.l
         y = [None] * self.l
-        st = self.s0 
+        ht = self.h0 
         for t in range(self.l):
             xt = x[t]
-            ht = xt @ self.U + st @ self.W + self.bh
-            st = np.tanh(ht)
-            yt = st @ self.V + self.by
+            ft = utils.sigmoid(xt @ self.Uf + ht @ self.Wf)
+            it = utils.sigmoid(xt @ self.Ui + ht @ self.Wi)
+            ot = utils.sigmoid(xt @ self.Uo + ht @ self.Wo)
+            hct = np.tanh(xt @ self.Uc + ht @ self.Wc)
+            ct = ft * ct + it * hct
+            ht = ot * np.tanh(ct)
+            yt = ht @ self.V
 
             self.x[t] = xt
+            self.f[t] = ft
+            self.i[t] = it
+            self.o[t] = ot
+            self.hc[t] = hct
+            self.c[t] = ct
             self.h[t] = ht
-            self.s[t] = st
             y[t] = yt
         return y
 
     def backward(self, dy):
-        dV = np.zeros_like(self.V)
-        dW = np.zeros_like(self.W)
-        dU = np.zeros_like(self.U)
-        dby = np.zeros_like(self.by)
-        dbh = np.zeros_like(self.bh)
         
         for t in reversed(range(self.l)):
             # for one time point only
@@ -91,6 +112,12 @@ class RNNLayer(Layer):
                     dht = np.clip((dht @ self.W.T) * (1 - self.h[i - 1] ** 2), -self.clip, self.clip)
                 else:
                     dsi, dWi, _ = utils.backward(dht, self.s0, self.W)
+                
+                if np.mean(dht) < 0.001:
+                    dht *= 10
+                    #print('vanishing gradient')
+
+                
             dV += dVt
             dW += dWt
             dU += dUt
@@ -151,16 +178,6 @@ class RNNLayer(Layer):
                 i += self.l
             
             
-def compute_rnn_loss(yhat, y):
-    l = len(y)
-    loss = 0
-    dy = [None] * l
-    for t in range(l):
-        pt = utils.softmax(yhat[t])
-        losst, dy[t] = utils.cross_entropy(pt, y[t])
-        loss += np.sum(losst)
-
-    return loss, dy
 
 
 

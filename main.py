@@ -28,7 +28,7 @@ def main():
     """
     
     text, x, y, char2idx, idx2char = getty()
-    T = 20
+    T = 100
     
     config = {
         'dim_hidden' : 300
@@ -38,17 +38,18 @@ def main():
       , 'step_size' : 0.001
     }
 
-    np.random.seed(42)
+    #np.random.seed(42)
     r = RNN(config)
     r.accept([27])
     
    
 
     ttb = r.sample('f', char2idx, idx2char)
-    r.fit(x, y, 100)
+    r.fit(x[:T], y[:T], 100, char2idx, idx2char)
     tta = r.sample('f', char2idx, idx2char)
     print(ttb)
     print(tta)
+    print(text[:T])
     return 
 
 

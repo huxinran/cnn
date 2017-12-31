@@ -40,6 +40,24 @@ def cross_entropy(p, l):
     p[np.arange(l.size), l] -= 1
     return loss, p
 
+def sigmoid(x):
+    if (x > 0):
+        return 1.0 - sigmoid(-x)
+    else:
+        return np.exp(x) / (1 + np.exp(x))
+
+def compute_rnn_loss(yhat, y):
+    l = len(y)
+    loss = [None] * l
+    dy = [None] * l
+    for t in range(l):
+        pt = utils.softmax(yhat[t])
+        loss[t], dy[t] = utils.cross_entropy(pt, y[t])
+
+    return loss, dy
+
+
+
 def forward(x, w, b):
     '''
     y = x * w + b
