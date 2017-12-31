@@ -28,10 +28,10 @@ def main():
     """
     
     text, x, y, char2idx, idx2char = getty()
-    T = 100
+    T = 20
        
     config = {
-        'dim_hidden' : 300
+        'dim_hidden' : 100
       , 'l' : T
       , 'clip' : 5
       , 'mu' : 0.9
@@ -43,7 +43,7 @@ def main():
     r.accept([27])
     m = 1
     ttb = r.sample('f', T * m, char2idx, idx2char)
-    r.fit(x[:T * m], y[:T * m], T, 1000, char2idx, idx2char)
+    r.fit(x[:T * m], y[:T * m], T, 10000, char2idx, idx2char)
     tta = r.sample('f', T * m, char2idx, idx2char)
     print(ttb)
     print(tta)
