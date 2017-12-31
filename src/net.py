@@ -5,8 +5,9 @@ sys.path.append('C:\\Users\\Xinran\\Desktop\\cnn\\src\\')
 import utils
 
 class Net:
-    def __init__(self, shape):
-        self.shape = shape 
+    def __init__(self, config):
+        self.config = config
+        self.shape = config['input_shape']
         self.layer = []
         
     def __repr__(self):
@@ -31,9 +32,9 @@ class Net:
         for l in reversed(self.layer):
             dx = l.backward(dx)
 
-    def learn(self, config):
+    def update(self):
         for l in self.layer:
-            l.learn(config)
+            l.update(self.config)
 
     def evaluate(self, y, y_true):
         p = utils.softmax(y)
@@ -46,16 +47,13 @@ class Net:
         
         self.backward(dy)
 
-        config = {
-            'step_size' : 0.1
-        }
-        self.learn(config)
+        self.update()
 
-        return loss
+        return loss, y
 
     def book_keeping_loss(self, loss):
-        avg_loss = np.mean(loss)
-        return 'avg Loss = {0:4.2f}'.format(avg_loss) 
+        avg_loss = np.mean(loss) 
+        return 'loss = {0:4.2f}'.format(avg_loss) 
 
     def fit(self, x, y, iteration):
         self.loss_history = [None] * iteration
@@ -64,12 +62,17 @@ class Net:
         print('Training started...')
         
         for t in range(iteration):
-            loss = self.train_one_iteration(x, y)
-            
+            if t % 10 == 0:
+                self.config['step_size'] *= self.config['step_decay']
+
+            loss, yfit = self.train_one_iteration(x, y)
+     
             msg = self.book_keeping_loss(loss)
+            
+            err = np.mean(1 * (np.argmax(yfit, axis=1) != y))
             
             time_remain = (time.time() - start) / (t + 1) * (iteration - t- 1)
 
-            print('Iter  {0:4d} | Time Remain: {1:4.2f} | {2}'.format(t, time_remain, msg), end='\r')  
+            print('Iter{0:4d}| {2} | {3:4.2f} | Time Remain: {1:4.1f} '.format(t, time_remain, msg, err))  
         
         print('Training finished. took {0:4.2f} s'.format(time.time() - start))

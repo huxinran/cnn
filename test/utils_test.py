@@ -118,6 +118,20 @@ class TestUtils(unittest.TestCase):
                               [0, 1, 0]]])
         self.assertTrue(np.allclose(img, img_true))
 
+    def test_compute_momentum(self):    
+        v0 = np.zeros([10])
+        dx = np.arange(10)
+        config = {
+            'mu' : 0.9,
+            'step_size' : 1
+        }
+        v1 = utils.compute_momentum(v0, dx, config)
+        self.assertTrue(np.allclose(v1, [-0, -1, -2, -3, -4, -5, -6, -7, -8, -9]))
+
+        dx = np.array([4, 3, 2, 1, 0, 4, 3, 2, 1, 0])
+        
+        v2 = utils.compute_momentum(v1, dx, config)
+        self.assertTrue(np.allclose(v2, [-4, -3.9, -3.8, -3.7, -3.6, -8.5, -8.4, -8.3, -8.2, -8.1]))
 
 if __name__ == "__main__":
     unittest.main()

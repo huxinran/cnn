@@ -2,8 +2,9 @@ from layer import Layer
 import numpy as np
 
 class ReluLayer(Layer):
-    def __init__(self):
+    def __init__(self, config):
         super(ReluLayer, self).__init__()
+        self.config = config
         self.type = 'Relu'
     
     def accept(self, shape_in):
@@ -20,5 +21,5 @@ class ReluLayer(Layer):
     def backward(self, dy):
         return dy * (1 * self.x > 0)
     
-    def learn(self, config):
+    def update(self, config):
         return

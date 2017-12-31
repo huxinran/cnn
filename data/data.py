@@ -45,4 +45,23 @@ def mnist():
     return np.array(train[0]), np.array(train[1])
 
 
+def getty():
+    f = './data/getty.txt'
+    with open(f, 'r') as fin:
+        text = fin.read().lower()
 
+    chars = list(set(text))
+    chars.sort()
+    char2idx = {c:i for i, c in enumerate(chars)}
+    idx2char = {i:c for i, c in enumerate(chars)}
+    l = len(text)
+    cl = len(chars)
+    x = [None] * l
+    y = [None] * l
+    for i, c in enumerate(text):
+        idx = char2idx[c]
+        x[i] = np.zeros([1, cl])
+        x[i][0][idx] = 1.0
+        y[i] = np.array([idx])
+
+    return text, x, y[1:], char2idx, idx2char 

@@ -10,24 +10,47 @@ from fc import FullyConnectedLayer as FC
 
 class TestNet(unittest.TestCase):
     def test_init(self):
-        n = Net(np.array([3, 5, 5]))
+        config = {
+            'input_shape' : [3, 5, 5]
+          , 'step_size' : 1
+          , 'mu' : 0.9
+          , 'step_decay' : 0.9
+        }
+        n = Net(config)
 
     def test_add_layer(self):
-        n = Net(np.array([3, 5, 5]))
+        config = {
+            'input_shape' : [3, 5, 5]
+          , 'step_size' : 1
+          , 'mu' : 0.9
+          , 'step_decay' : 0.9
+        }
+        n = Net(config)
         l = FC(10)
         n.add(l)
 
     def test_train_iteration(self):
-        n = Net(np.array([3, 5, 5]))
+        config = {
+            'input_shape' : [3, 5, 5]
+          , 'step_size' : 1
+          , 'mu' : 0.9
+          , 'step_decay' : 0.9
+        }
+        n = Net(config)
         l = FC(10)
         n.add(l)
         x = np.random.random([1, 3, 5, 5]).reshape(1, -1)
         y = np.array([0])
         loss = n.train_one_iteration(x, y)
-        print(loss)
     
     def test_fit(self):
-        n = Net(np.array([3, 5, 5]))
+        config = {
+            'input_shape' : [3, 5, 5]
+          , 'step_size' : 1
+          , 'mu' : 0.9
+          , 'step_decay' : 0.9
+        }
+        n = Net(config)
         l = FC(10)
         n.add(l)
         x = np.random.random([1, 3, 5, 5]).reshape(1, -1)

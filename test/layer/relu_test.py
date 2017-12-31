@@ -39,7 +39,6 @@ class TestReluLayer(unittest.TestCase):
 
     def test_repr(self):
         l = Relu()
-        print(l)
         pass
     
 

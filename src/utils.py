@@ -1,4 +1,15 @@
 import numpy as np
+import matplotlib.pyplot as plt
+
+
+def plot_black(img):
+    plt.imshow(img, cmap='gray')
+    plt.pause(0.1)
+
+def plot_color(img):
+    plt.imshow(img)
+    plt.pause(0.1)
+
 
 def softmax(y):
     '''
@@ -29,6 +40,24 @@ def cross_entropy(p, l):
     p[np.arange(l.size), l] -= 1
     return loss, p
 
+def sigmoid(x):
+    if (x > 0):
+        return 1.0 - sigmoid(-x)
+    else:
+        return np.exp(x) / (1 + np.exp(x))
+
+def compute_rnn_loss(yhat, y):
+    l = len(y)
+    loss = [None] * l
+    dy = [None] * l
+    for t in range(l):
+        pt = utils.softmax(yhat[t])
+        loss[t], dy[t] = utils.cross_entropy(pt, y[t])
+
+    return loss, dy
+
+
+
 def forward(x, w, b):
     '''
     y = x * w + b
@@ -45,6 +74,10 @@ def backward(dy, x, w):
     dw = x.T @ dy
     db = np.sum(dy, axis=0)
     return dx, dw, db
+
+def compute_momentum(v, dw, config):
+    return v * config['mu'] - dw * config['step_size']
+
 
 def pad_img(img, pad):
     '''
@@ -128,5 +161,8 @@ def normalize(data):
     """
     normalize data
     """
-    data = data - np.mean(data, axis=0)
+    data -= np.mean(data, axis=0)
+    data /= np.sqrt(np.var(data, axis=0)) 
     return data
+
+

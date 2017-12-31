@@ -75,5 +75,5 @@ class MaxPoolLayer(Layer):
                                       self.indice).ravel()
         return dx
     
-    def learn(self, config):
+    def update(self, config):
         pass

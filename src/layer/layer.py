@@ -40,7 +40,7 @@ class Layer:
         '''
         raise Exception('backward is not implemented')
 
-    def learn(self, config):
+    def update(self, config):
         '''
         call after backward
         '''

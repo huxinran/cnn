@@ -32,15 +32,16 @@ class FullyConnectedLayer(Layer):
     Fully Connected Layer Class represents a general function f(x, w) = y
     it provides 3 utility functions
     '''
-
-    
-    def __init__(self, shape):
+    def __init__(self, config):
         super(FullyConnectedLayer, self).__init__()
         self.type = 'FullyConnected'
-        self.shape = shape
+        self.config = config
+        self.shape = config['shape']
         self.dim_out = np.prod(self.shape, dtype=int)
 
     def accept(self, shape_in):
+        
+
         self.shape_in = shape_in
         self.dim_in = np.prod(self.shape_in, dtype=int)
         
@@ -50,6 +51,8 @@ class FullyConnectedLayer(Layer):
         
         # cache
         self.x = None
+        self.dw_m = np.zeros([self.dim_in, self.dim_out])
+        self.db_m = np.zeros([1, self.dim_out])
         self.dw = None
         self.db = None
         return True
@@ -61,12 +64,12 @@ class FullyConnectedLayer(Layer):
     def backward(self, dy):
         N = dy.shape[0]
         dx, dw, db = utils.backward(dy, self.x, self.w)
-        self.x = None
-
-        self.dw = dw / N
-        self.db = db / N
+        self.dw = dw
+        self.db = db
         return dx
     
-    def learn(self, param):
-        self.w -= self.dw * param['step_size']
-        self.b -= self.db * param['step_size'] 
+    def update(self, config):
+        self.dw_m = utils.compute_momentum(self.dw_m, self.dw, config)    
+        self.dw_b = utils.compute_momentum(self.db_m, self.db, config)
+        self.w += self.dw_m
+        self.b += self.db_m
