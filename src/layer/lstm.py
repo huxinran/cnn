@@ -15,93 +15,121 @@ class LSTMLayer(Layer):
         self.shape = self.shape_in
         self.dim_in = np.prod(self.shape_in, dtype=int)
         self.dim_out = np.prod(self.shape, dtype=int)
+        
         # param 
-        self.s0 = np.zeros([1, self.dim_hidden])
+        self.c0 = np.zeros([1, self.dim_hidden])
 
-        self.Uf = np.random.normal(0, 1 / np.sqrt(self.dim_in), [self.dim_in, self.dim_hidden])
-        self.Wf = np.random.normal(0, 1 / np.sqrt(self.dim_hidden), [self.dim_hidden, self.dim_hidden])
-
-        self.Ui = np.random.normal(0, 1 / np.sqrt(self.dim_in), [self.dim_in, self.dim_hidden])
-        self.Wi = np.random.normal(0, 1 / np.sqrt(self.dim_hidden), [self.dim_hidden, self.dim_hidden])
-        
-        self.Uc = np.random.normal(0, 1 / np.sqrt(self.dim_in), [self.dim_in, self.dim_hidden])
-        self.Wc = np.random.normal(0, 1 / np.sqrt(self.dim_hidden), [self.dim_hidden, self.dim_hidden])
-        
-        self.Uo = np.random.normal(0, 1 / np.sqrt(self.dim_in), [self.dim_in, self.dim_hidden])
-        self.Wo = np.random.normal(0, 1 / np.sqrt(self.dim_hidden), [self.dim_hidden, self.dim_hidden])
-
-
-        
-        self.V = np.random.normal(0, 1 / np.sqrt(self.dim_hidden), [self.dim_hidden, self.dim_out])
-        self.by = np.random.normal(0, 1 / np.sqrt(self.dim_out), [1, self.dim_out])
-
-        self.bh = np.random.normal(0, 1 / np.sqrt(self.dim_hidden), [1, self.dim_hidden]) 
+        self.Uf = np.random.randn(self.dim_in, self.dim_hidden) / np.sqrt(self.dim_in)
+        self.Wf = np.random.randn(self.dim_hidden, self.dim_hidden) / np.sqrt(self.dim_hidden)
+        self.bf = np.zeros((1, self.dim_hidden))
+        self.Ui = np.random.randn(self.dim_in, self.dim_hidden) / np.sqrt(self.dim_in)
+        self.Wi = np.random.randn(self.dim_hidden, self.dim_hidden) / np.sqrt(self.dim_hidden)
+        self.bi = np.zeros((1, self.dim_hidden))
+        self.Uo = np.random.randn(self.dim_in, self.dim_hidden) / np.sqrt(self.dim_in)
+        self.Wo = np.random.randn(self.dim_hidden, self.dim_hidden) / np.sqrt(self.dim_hidden)
+        self.bo = np.zeros((1, self.dim_hidden))
+        self.Uc = np.random.randn(self.dim_in, self.dim_hidden) / np.sqrt(self.dim_in)
+        self.Wc = np.random.randn(self.dim_hidden, self.dim_hidden) / np.sqrt(self.dim_hidden)
+        self.bc = np.zeros((1, self.dim_hidden))
+        self.V = np.random.randn(self.dim_hidden, self.dim_out) / np.sqrt(self.dim_hidden)
+        self.by = np.zeros((1, self.dim_out))
 
         # cache
-        self.dV = np.zeros_like(self.V)
-        self.dW = np.zeros_like(self.W)
-        self.dU = np.zeros_like(self.U)
-        self.dby = np.zeros_like(self.by)
-        self.dbh = np.zeros_like(self.bh)
-
-
-    def sample(self, c, char2idx, idx2char):
-        y = [None] * (self.l + 1)
-        x = np.zeros([1, self.dim_in])
-        x[0][char2idx[c]] = 1.0
-        st = self.s0
-        y[0] = c
-        for t in range(self.l):
-            st = np.tanh(x @ self.U + st @ self.W)
-            x = st @ self.V
-            idx = np.argmax(x)
-            y[t + 1] = idx2char[idx]
-        
-        return ''.join(y)
-
-
     
     def forward(self, x):
-        self.x = [None] * self.l
-        self.f = [None] * self.l
-        self.i = [None] * self.l
-        self.o = [None] * self.l
-        self.c = [None] * self.l
-        self.hc = [None] * self.l
-        self.h = [None] * self.l
-        self.s = [None] * self.l
-        y = [None] * self.l
-        ht = self.h0 
-        for t in range(self.l):
+        l = len(x)
+        self.c = [None] * l # internal state
+        self.x = [None] * l # external input 
+        self.f = [None] * l # forget gate
+        self.i = [None] * l # input gate
+        self.g = [None] * l # pre-activate state
+        self.o = [None] * l # output gate
+        self.h = [None] * l # actual output 
+        y = [None] * l # your know, what every you want
+        
+        ct = self.c0 
+        for t in range(l):
             xt = x[t]
-            ft = utils.sigmoid(xt @ self.Uf + ht @ self.Wf)
-            it = utils.sigmoid(xt @ self.Ui + ht @ self.Wi)
-            ot = utils.sigmoid(xt @ self.Uo + ht @ self.Wo)
-            hct = np.tanh(xt @ self.Uc + ht @ self.Wc)
-            ct = ft * ct + it * hct
+            ft = utils.sigmoid(xt @ self.Uf + ct @ self.Wf + self.bf)
+            it = utils.sigmoid(xt @ self.Ui + ct @ self.Wi + self.bi)
+            gt = np.tanh(xt @ self.Uc + ct @ self.Wc + self.bc)
+            ct = ft * ct + it * gt
+            ot = utils.sigmoid(xt @ self.Uo + ct @ self.Wo + self.bo)
             ht = ot * np.tanh(ct)
-            yt = ht @ self.V
+            yt = ht @ self.V + self.by
 
             self.x[t] = xt
             self.f[t] = ft
             self.i[t] = it
-            self.o[t] = ot
-            self.hc[t] = hct
+            self.g[t] = gt
             self.c[t] = ct
+            self.o[t] = ot
             self.h[t] = ht
             y[t] = yt
         return y
 
     def backward(self, dy):
+        dUf = np.zeros_like(self.Uf)
+        dUi = np.zeros_like(self.Ui)
+        dUo = np.zeros_like(self.Uo)
+        dUc = np.zeros_like(self.Uc)
+
+        dWf = np.zeros_like(self.Wf)
+        dWi = np.zeros_like(self.Wi)
+        dWo = np.zeros_like(self.Wo)
+        dWc = np.zeros_like(self.Wc)
+
+        dbf = np.zeros_like(self.bf)
+        dbi = np.zeros_like(self.bi)
+        dbo = np.zeros_like(self.bo)
+        dbc = np.zeros_like(self.bc)
         
-        for t in reversed(range(self.l)):
-            # for one time point only
+        dV = np.zeros_like(self.V)
+        dby = np.zeros_like(self.by)
+        
+        l = len(dy)
+        for t in reversed(range(l)):
+            # for one time point only    
+            dUft = np.zeros_like(self.Uf)
+            dUit = np.zeros_like(self.Ui)
+            dUot = np.zeros_like(self.Uo)
+            dUct = np.zeros_like(self.Uc)
+
+            dWft = np.zeros_like(self.Wf)
+            dWit = np.zeros_like(self.Wi)
+            dWot = np.zeros_like(self.Wo)
+            dWct = np.zeros_like(self.Wc)
+
+            dbft = np.zeros_like(self.bf)
+            dbit = np.zeros_like(self.bi)
+            dbot = np.zeros_like(self.bo)
+            dbct = np.zeros_like(self.bc)
+            
             dVt = np.zeros_like(self.V)
-            dWt = np.zeros_like(self.W)
-            dUt = np.zeros_like(self.U)
+            dbyt = np.zeros_like(self.by)
 
             dyt = dy[t]
-            dst, dVt, dbyt = utils.backward(dyt, self.s[t], self.V)
+
+            dht, dVt, dbyt = utils.backward(dyt, self.h[t], self.V)
+
+            dot = dht * np.tanh(self.c[t])
+            
+
+            dct = dht * self.o[t] * (1 - self.c[t] ** 2)
+            _, dWct, _ = utils.backward(dct, self.c[t -1], self.Wc[t]) 
+            _, dUct, _ = utils.backward(dct, self.x[t], self.Uc[t])
+
+            dft = dct * self.c[t - 1]
+            _, dWft, _ = utils.backward(dft, self.c[t -1], self.Wf[t]) 
+            _, dUft, _ = utils.backward(dft, self.x[t], self.Uf[t])
+
+            dgt = dct * self.i[t]
+            _, dWgt, _ = utils.backward(dgt, self.c[t -1], self.Wg[t]) 
+            _, dUgt, _ = utils.backward(dgt, self.x[t], self.Ug[t])
+
+            dit = dct * self.g[t]
+
+
             dht = dst * (1 - self.h[t] ** 2)
             dbht = dht
             for i in reversed(range(t)):
@@ -151,6 +179,22 @@ class LSTMLayer(Layer):
         #self.V -= self.config['step_size'] * dVt
         #self.W -= self.config['step_size'] * dWt
         #self.U -= self.config['step_size'] * dUt
+
+    def sample(self, c, char2idx, idx2char):
+        y = [None] * (self.l + 1)
+        x = np.zeros([1, self.dim_in])
+        x[0][char2idx[c]] = 1.0
+        st = self.s0
+        y[0] = c
+        for t in range(self.l):
+            st = np.tanh(x @ self.U + st @ self.W)
+            x = st @ self.V
+            idx = np.argmax(x)
+            y[t + 1] = idx2char[idx]
+        
+        return ''.join(y)
+
+
 
     def translate(self, yhat, idx2char):
         return ''.join([idx2char[np.argmax(y)] for y in yhat])

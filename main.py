@@ -29,7 +29,7 @@ def main():
     
     text, x, y, char2idx, idx2char = getty()
     T = 100
-    
+       
     config = {
         'dim_hidden' : 300
       , 'l' : T
@@ -41,15 +41,13 @@ def main():
     #np.random.seed(42)
     r = RNN(config)
     r.accept([27])
-    
-   
-
-    ttb = r.sample('f', char2idx, idx2char)
-    r.fit(x[:T], y[:T], 100, char2idx, idx2char)
-    tta = r.sample('f', char2idx, idx2char)
+    m = 1
+    ttb = r.sample('f', T * m, char2idx, idx2char)
+    r.fit(x[:T * m], y[:T * m], T, 1000, char2idx, idx2char)
+    tta = r.sample('f', T * m, char2idx, idx2char)
     print(ttb)
     print(tta)
-    print(text[:T])
+    print(text[:T * m])
     return 
 
 

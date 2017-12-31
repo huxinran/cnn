@@ -40,11 +40,13 @@ def cross_entropy(p, l):
     p[np.arange(l.size), l] -= 1
     return loss, p
 
-def sigmoid(x):
-    if (x > 0):
+def sigmoid_single(x):
+    if (x < 0):
         return 1.0 - sigmoid(-x)
     else:
-        return np.exp(x) / (1 + np.exp(x))
+        return 1 / (1 + np.exp(-x))
+
+sigmoid = np.vectorize(sigmoid_single) 
 
 def compute_rnn_loss(yhat, y):
     l = len(y)
