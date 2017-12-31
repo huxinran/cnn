@@ -8,7 +8,6 @@ class LSTMLayer(Layer):
         self.type = 'LSTM'
         self.config = config
         self.dim_hidden = config['dim_hidden']
-        self.l = config['l']
         self.clip = config['clip']
         
     def accept(self, shape_in):      
