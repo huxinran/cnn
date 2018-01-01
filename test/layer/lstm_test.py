@@ -11,6 +11,7 @@ class TestLSTMLayer(unittest.TestCase):
     def test_init(self):
         config = {
             'dim_hidden' : 10
+          , 'l' : 10
           , 'clip' : 5
         }
         l = LSTM(config)
@@ -19,6 +20,7 @@ class TestLSTMLayer(unittest.TestCase):
     def test_accept(self):
         config = {
             'dim_hidden' : 10
+          , 'l' : 10
           , 'clip' : 5
         }
         l = LSTM(config)
@@ -28,6 +30,7 @@ class TestLSTMLayer(unittest.TestCase):
     def test_forward(self):
         config = {
             'dim_hidden' : 10
+          , 'l' : 10
           , 'clip' : 5
         }
         l = LSTM(config)
@@ -35,10 +38,22 @@ class TestLSTMLayer(unittest.TestCase):
 
         x = [np.array([0, 1])]
         y = l.forward(x)
-        print(y)
         pass
 
     def test_backward(self):
+        config = {
+            'dim_hidden' : 3
+          , 'l' : 10
+          , 'clip' : 5
+        }
+        l = LSTM(config)
+        l.accept([2])
+        
+        x = [np.array([[0, 1]])]
+        y = l.forward(x)
+        dy = [np.array([[0, 1]])]
+        d = l.backward(dy, np.array([0.1]), np.array([0.1]))
+        print(d)      
         pass
     
     def test_fit(self):

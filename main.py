@@ -17,10 +17,9 @@ from conv import ConvLayer as Conv
 from relu import ReluLayer as Relu
 from maxpool import MaxPoolLayer as MaxPool
 from rnn import RNNLayer as RNN
-from rnn import compute_rnn_loss 
+from lstm import LSTMLayer as LSTM
 
 from utils import normalize
-from utils import plot_color
 
 def main():
     """
@@ -28,10 +27,10 @@ def main():
     """
     
     text, x, y, char2idx, idx2char = getty()
-    T = 20
+    T = 50
        
     config = {
-        'dim_hidden' : 100
+        'dim_hidden' : 200
       , 'l' : T
       , 'clip' : 5
       , 'mu' : 0.9
@@ -42,9 +41,9 @@ def main():
     r = RNN(config)
     r.accept([27])
     m = 1
-    ttb = r.sample('f', T * m, char2idx, idx2char)
-    r.fit(x[:T * m], y[:T * m], T, 10000, char2idx, idx2char)
-    tta = r.sample('f', T * m, char2idx, idx2char)
+    ttb = r.sample('f', T * m, char2idx, idx2char, **r.model)
+    r.fit(x[:T * m], y[:T * m ], T, 100000, char2idx, idx2char)
+    tta = r.sample('f', T * m, char2idx, idx2char, **r.model)
     print(ttb)
     print(tta)
     print(text[:T * m])

@@ -1,16 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-
-def plot_black(img):
-    plt.imshow(img, cmap='gray')
-    plt.pause(0.1)
-
-def plot_color(img):
-    plt.imshow(img)
-    plt.pause(0.1)
-
-
 def softmax(y):
     '''
     comput softmax of a list of value
@@ -40,25 +30,21 @@ def cross_entropy(p, l):
     p[np.arange(l.size), l] -= 1
     return loss, p
 
-def sigmoid_single(x):
-    if (x < 0):
-        return 1.0 - sigmoid(-x)
-    else:
-        return 1 / (1 + np.exp(-x))
-
-sigmoid = np.vectorize(sigmoid_single) 
-
-def compute_rnn_loss(yhat, y):
-    l = len(y)
-    loss = [None] * l
-    dy = [None] * l
-    for t in range(l):
-        pt = utils.softmax(yhat[t])
-        loss[t], dy[t] = utils.cross_entropy(pt, y[t])
-
+def cross_entropy_list(p, l):
+    """
+    given the output and true label,
+    return softmax cross entropy loss and gradient on output
+    """
+    dy = []
+    loss = 0
+    for i in range(len(p)):
+        lossi, dyi = cross_entropy(p[i], l[i])
+        loss += np.sum(lossi)        
+        dy.append(dyi)
     return loss, dy
 
-
+def sigmoid(x):
+    return 1 / (1 + np.exp(np.clip(-x, -30, 30)))
 
 def forward(x, w, b):
     '''
@@ -80,6 +66,8 @@ def backward(dy, x, w):
 def compute_momentum(v, dw, config):
     return v * config['mu'] - dw * config['step_size']
 
+def translate(y, idx2char):
+    return ''.join([idx2char[np.argmax(yi)] for yi in y])
 
 def pad_img(img, pad):
     '''

@@ -15,158 +15,126 @@ class RNNLayer(Layer):
         self.shape = self.shape_in
         self.dim_in = np.prod(self.shape_in, dtype=int)
         self.dim_out = np.prod(self.shape, dtype=int)
-        # param 
-        self.h0 = np.zeros([1, self.dim_hidden])
-        
-        self.U = np.random.randn(self.dim_in, self.dim_hidden) / np.sqrt(self.dim_in)
-        self.W = np.random.randn(self.dim_hidden, self.dim_hidden) / np.sqrt(self.dim_hidden)
-        self.bh = np.zeros([1, self.dim_hidden]) 
 
-        self.V = np.random.randn(self.dim_hidden, self.dim_out) / np.sqrt(self.dim_hidden)
-        self.by = np.zeros([1, self.dim_out])
-        
+        # param         
+        self.model = {
+            'U' : np.random.randn(self.dim_in, self.dim_hidden) * 0.01
+          , 'W' : np.random.randn(self.dim_hidden, self.dim_hidden) * 0.01
+          , 'V' : np.random.randn(self.dim_hidden, self.dim_out) * 0.01 
+          , 'bh' : np.zeros([1, self.dim_hidden])
+          , 'by' : np.zeros([1, self.dim_out])
+        }
+
+        self.G = {
+            'U' : np.zeros([self.dim_in, self.dim_hidden])
+          , 'W' : np.zeros([self.dim_hidden, self.dim_hidden])
+          , 'V' : np.zeros([self.dim_hidden, self.dim_out]) 
+          , 'bh' : np.zeros([1, self.dim_hidden])
+          , 'by' : np.zeros([1, self.dim_out])
+        }
         # cache
-        self.dV = np.zeros_like(self.V)
-        self.dW = np.zeros_like(self.W)
-        self.dU = np.zeros_like(self.U)
-        self.dby = np.zeros_like(self.by)
-        self.dbh = np.zeros_like(self.bh)
-    
-    def forward(self, x, h_prev):
-        l = len(x)
-        self.x = [None] * l
-        self.s = [None] * l
-        self.h = [None] * l
-        y = [None] * l
-        ht = h_prev
+        self.x = []
+        self.h = []
+
+    def forward(self, xs, h_prev, V, U, W, bh, by):
+        l = len(xs)
+        ys = []
+        self.x = []
+        self.h = []
+        h = np.copy(h_prev)
         for t in range(l):
-            xt = x[t]
-            st = xt @ self.U + ht @ self.W + self.bh
-            ht = np.tanh(st)
-            yt = ht @ self.V + self.by
+            s = xs[t] @ U + h @ W + bh
+            h = np.tanh(s)
+            y = h @ V + by
+            self.x.append(xs[t])
+            self.h.append(h)
+            ys.append(y)
+        return ys
 
-            self.x[t] = xt
-            self.s[t] = st
-            self.h[t] = ht
-            y[t] = yt
-        return y
-
-    def backward(self, dy, dh):
-        l = len(dy)
-        dV = np.zeros_like(self.V)
-        dW = np.zeros_like(self.W)
-        dU = np.zeros_like(self.U)
-        dby = np.zeros_like(self.by)
-        dbh = np.zeros_like(self.bh)
-        
-        dh_prev = dh
-        for t in reversed(range(l)):
-            # for one time point only
-            dVt = np.zeros_like(self.V)
-            dWt = np.zeros_like(self.W)
-            dUt = np.zeros_like(self.U)
-
-            dyt = dy[t]
-            dht, dVt, dbyt = utils.backward(dyt, self.h[t], self.V)
-            dht = dht + dh_prev 
-            
-            dst = dht * (1 - self.h[t] ** 2)
-            dbht = dst
-            #print(t)
-
+    def backward(self, dys, h_prev_i, V, W, U, by, bh):
+        grad = {k:np.zeros_like(v) for k, v, in self.model.items()}
+        l = len(dys)
+        dh_prev = np.zeros([1, self.dim_hidden])
+        for t in reversed(range(l)):            
             if t == 0:
-                dh_prev, dWt, _ = utils.backward(dst, self.h[t - 1], self.W)
+                h_prev = np.copy(h_prev_i)
             else:
-                dh_prev, dWt, _ = utils.backward(dst, self.h0, self.W)
+                h_prev = self.h[t - 1]
 
-            dxt, dUt, _ = utils.backward(dst, self.x[t], self.U)
-
-            dV += dVt
-            dW += dWt
-            dU += dUt
-            dby += dbyt
-            dbh += dbht
-
+            dy = np.copy(dys[t])
+            dh, dV, dby = utils.backward(dy, self.h[t], V)
+            dh += dh_prev
+            ds = dh * (1 - self.h[t] ** 2)
+            dbh = ds
+            dx, dU, _ = utils.backward(ds, self.x[t], U) 
+            dh_prev, dW, _ =utils.backward(ds, h_prev, W)
+            grad['V'] += dV
+            grad['U'] += dU
+            grad['W'] += dW
+            grad['bh'] += dbh
+            grad['by'] += dby
         
-        dV = np.clip(dV, -self.clip, self.clip)
-        dW = np.clip(dW, -self.clip, self.clip)
-        dU = np.clip(dU, -self.clip, self.clip)
-        dby = np.clip(dby, -self.clip, self.clip)
-        dbh = np.clip(dbh, -self.clip, self.clip)
+        for k, v in grad.items():
+            v = np.clip(v, -self.clip, self.clip)
 
-        return dV, dW, dU, dby, dbh, dh_prev
+        return grad, dh_prev
 
-    def learn(self, gradient):
-        dVt, dWt, dUt, dbyt, dbht, dh_prev = gradient
-        self.dV += dVt ** 2
-        self.dW += dWt ** 2
-        self.dU += dUt ** 2 
-        self.dby += dbyt ** 2
-        self.dbh += dbht ** 2 
+    def learn(self, grad):
+        for k, v in grad.items():
+            self.G[k] += v ** 2
 
         step_size = self.config['step_size']
-        self.V -= dVt * self.dV ** -0.5 * step_size
-        self.W -= dWt * np.sqrt(self.dW) * step_size
-        self.U -= dUt * np.sqrt(self.dU) * step_size
-        self.by -= dbyt * np.sqrt(self.dby) * step_size
-        self.bh -= dbht * np.sqrt(self.dbh) * step_size
+        for k, v in grad.items():
+            self.model[k] -= v / np.sqrt(np.maximum(1e-10, self.G[k]))
 
         
-    def sample(self, c, l, char2idx, idx2char):
+    def sample(self, c, l, char2idx, idx2char, V, U, W, bh, by):
         y = [None] * (l + 1)
         x = np.zeros([1, self.dim_in])
         x[0][char2idx[c]] = 1.0
-        ht = self.h0
         y[0] = c
+        h = np.zeros([1, self.dim_hidden])
         for t in range(l):
-            ht = np.tanh(x @ self.U + ht @ self.W + self.bh)
-            yhat = ht @ self.V + self.by
+            h = np.tanh(x @ U + h @ W + bh)
+            yhat = h @ V + by
             idx = np.argmax(yhat)
             y[t + 1] = idx2char[idx]
-        
         return ''.join(y)
         #self.V -= self.config['step_size'] * dVt
         #self.W -= self.config['step_size'] * dWt
         #self.U -= self.config['step_size'] * dUt
 
-    def translate(self, yhat, idx2char):
-        return ''.join([idx2char[np.argmax(y)] for y in yhat])
+
 
     
     def fit(self, x, y, l, iter, char2idx, idx2char):
         lx = len(x)
         for t in range(iter):
             i = 0
-            ht = self.h0
-            dh_prev = self.h0
-            ##if t % 100 == 0:
-             #   self.config['step_size'] *= 0.8
-
+            
+            h = np.zeros([1, self.dim_hidden])
+            loss = 0
             while i < lx:
                 e = min(lx, i + l)
                 xb = x[i:e]
                 yb = y[i:e]
-                yhat = self.forward(xb, ht)
-                loss, dy = compute_rnn_loss(yhat, yb)
-                grad = self.backward(dy, dh_prev)
+                yhat = self.forward(xb, h, **self.model)
+            
+                p = [utils.softmax(y) for y in yhat]
+                losst, dy = utils.cross_entropy_list(p, yb)
+                loss += losst
+                
+                grad, _ = self.backward(dy, h, **self.model)
+                
                 self.learn(grad)
-                ht = self.h[-1]
-                dh_prev = grad[-1]
-                tt = self.translate(yhat, idx2char)
-                print(t, loss, tt)
-                i += l
-            
-            
-def compute_rnn_loss(yhat, y):
-    l = len(y)
-    loss = 0
-    dy = [None] * l
-    for t in range(l):
-        pt = utils.softmax(yhat[t])
-        losst, dy[t] = utils.cross_entropy(pt, y[t])
-        loss += np.sum(losst)
+                h = np.copy(self.h[-1])
 
-    return loss, dy
+                i += l
+                
+            if t % 100 == 0:
+                tt = self.sample('f', 40, char2idx, idx2char, **self.model)
+                print(t, loss, tt)            
+
 
 
 

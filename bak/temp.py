@@ -85,3 +85,12 @@ def debug():
     print(1)
     print(end - start)
     return
+
+
+def plot_black(img):
+    plt.imshow(img, cmap='gray')
+    plt.pause(0.1)
+
+def plot_color(img):
+    plt.imshow(img)
+    plt.pause(0.1)
