@@ -56,12 +56,11 @@ def getty():
     idx2char = {i:c for i, c in enumerate(chars)}
     l = len(text)
     cl = len(chars)
-    x = [None] * l
-    y = [None] * l
+    x = np.zeros([l, 1, cl])
+    y = np.zeros([l, 1])
     for i, c in enumerate(text):
         idx = char2idx[c]
-        x[i] = np.zeros([1, cl])
         x[i][0][idx] = 1.0
-        y[i] = np.array([idx])
+        y[i][0] = np.array([idx])
 
     return text, x, y[1:], char2idx, idx2char 
