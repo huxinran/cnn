@@ -5,13 +5,15 @@ import matplotlib.pyplot as plt
 
 class ConvLayer(Layer):
     def __init__(self, config):        
-        super(ConvLayer, self).__init__()
-        self.type = 'Convolution'
+        super(ConvLayer, self).__init__(config)
+        self.type = 'Conv'
         self.config = config
+        
         self.shape_k = config['kernel_shape']
         self.dout = config['output_depth']
         self.pad = config['pad']
         self.stride = config['stride']
+        
         self.hk, self.wk = self.shape_k
         
     def accept(self, shape_in):
@@ -38,10 +40,13 @@ class ConvLayer(Layer):
         self.dim_k = self.dk * self.hk * self.wk
         
         # params
-        self.w = np.random.normal(0, 1.0 / np.sqrt(self.dim_k), [self.dim_k, self.dout])
-        self.b = np.random.normal(0, 1.0 / np.sqrt(self.dim_k), [1, self.dout])
+        self.param = {
+            'w' : np.random.randn(self.dim_k, self.dout) / np.sqrt(self.dim_k)
+          , 'b' : np.ones([1, self.dout]) * 0.1
+        }
         
         # cache
+        self.cache = {}
         self.fx = None
         self.dw = np.zeros([self.dim_k, self.dout])
         self.db = np.zeros([1, self.dout])
@@ -55,28 +60,31 @@ class ConvLayer(Layer):
         N = x.shape[0]
         y = np.zeros((N, self.dim_out)) 
 
-        self.fx = np.zeros((N, self.hout * self.wout, self.dim_k))
+        flatten_x = np.zeros((N, self.hout * self.wout, self.dim_k))
         
         for i in range(N):
-            self.fx[i,] = utils.flatten(x[i, :].reshape(self.shape_in),
-                                        self.shape_in, 
-                                        self.shape_k, 
-                                        self.pad,
-                                        self.stride, 
-                                        self.indice).reshape(self.hout * self.wout, -1) 
-            y[i,] = utils.forward(self.fx[i,], self.w, self.b).T.ravel()
-        return y
+            flatten_x[i,] = utils.flatten(x[i, :].reshape(self.shape_in),
+                                          self.shape_in, 
+                                          self.shape_k, 
+                                          self.pad,
+                                          self.stride, 
+                                          self.indice).reshape(self.hout * self.wout, -1) 
+            y[i,] = utils.forward(flatten_x[i,], self.param['w'], self.param['b']).T.ravel()
+        return y, flatten_x
 
     def backward(self, dy):
         N = dy.shape[0]
         dx = np.zeros([N, self.dim_in])
-        dw = np.zeros([self.dim_k, self.dout])
-        db = np.zeros([1, self.dout])
+        
+        dparam = {
+            'w' : np.zeros([self.dim_k, self.dout])
+          , 'b' : np.zeros([1, self.dout])
+        }
 
         for i in range(N):
             dyi = dy[i, :].reshape(self.dout, -1).T
 
-            dfxi, dwi, dbi = utils.backward(dyi, self.fx[i, ], self.w)
+            dfxi, dwi, dbi = utils.backward(dyi, self.cache['flatten_x'][i, ], self.param['w'])
 
             dx[i,] = utils.unflatten(dfxi, 
                                      self.shape_in,
@@ -84,14 +92,12 @@ class ConvLayer(Layer):
                                      self.pad,
                                      self.stride,
                                      self.indice).ravel() 
-            dw += dwi
-            db += dbi
-
-        self.dw_cache = dw
-        self.db_cache = db 
-        return dx
+            dparam['w'] += dwi
+            dparam['b'] += dbi
+ 
+        return dx, dparam
     
-    def update(self):
+    def learn(self):
         self.dw = utils.compute_momentum(self.dw, self.dw_cache, self.config)
         self.db = utils.compute_momentum(self.db, self.db_cache, self.config)
         self.w += self.dw_m

@@ -24,17 +24,19 @@ class Net:
     def forward(self, x):
         y = x
         for l in self.layer:
-            y = l.forward(y)
+            y, cache = l.forward(y)
+            l.cache = cache
         return y
 
     def backward(self, dy):
         dx = dy
         for l in reversed(self.layer):
-            dx = l.backward(dx)
+            dx, dparam = l.backward(dx)
+            l.dparam = dparam
 
-    def update(self):
+    def learn(self):
         for l in self.layer:
-            l.update(self.config)
+            l.learn(l.dparam)
 
     def evaluate(self, y, y_true):
         p = utils.softmax(y)
@@ -47,7 +49,7 @@ class Net:
         
         self.backward(dy)
 
-        self.update()
+        self.learn()
 
         return loss, y
 

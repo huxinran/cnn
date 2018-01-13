@@ -26,7 +26,10 @@ class TestNet(unittest.TestCase):
           , 'step_decay' : 0.9
         }
         n = Net(config)
-        l = FC(10)
+        
+        l = FC({
+            'shape' : 10
+        })
         n.add(l)
 
     def test_train_iteration(self):
@@ -37,7 +40,10 @@ class TestNet(unittest.TestCase):
           , 'step_decay' : 0.9
         }
         n = Net(config)
-        l = FC(10)
+
+        l = FC({
+            'shape' : 10
+        })
         n.add(l)
         x = np.random.random([1, 3, 5, 5]).reshape(1, -1)
         y = np.array([0])
@@ -51,7 +57,10 @@ class TestNet(unittest.TestCase):
           , 'step_decay' : 0.9
         }
         n = Net(config)
-        l = FC(10)
+        
+        l = FC({
+            'shape' : 10
+        })
         n.add(l)
         x = np.random.random([1, 3, 5, 5]).reshape(1, -1)
         y = np.array([0])

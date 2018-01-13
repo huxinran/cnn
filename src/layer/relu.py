@@ -11,15 +11,20 @@ class ReluLayer(Layer):
         self.shape_in = shape_in
         self.shape = shape_in
         self.dim_in = np.prod(self.shape_in, dtype=int)
-        self.dim_out = np.prod(self.shape, dtype=int)
+        self.dim = np.prod(self.shape, dtype=int)
         return True
 
     def forward(self, x):
-        self.x = np.maximum(0, x)
-        return self.x
+        cache = {
+            'mask' : np.maximum(0, x) > 0
+        }
+        y = x * cache['mask']
+        return y, cache
     
     def backward(self, dy):
-        return dy * (1 * self.x > 0)
+        dx = dy * self.cache['mask']
+        dparam = None
+        return dx, dparam
     
-    def update(self, config):
+    def learn(self, dparam):
         return
