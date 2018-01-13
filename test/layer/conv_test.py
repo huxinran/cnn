@@ -8,6 +8,10 @@ from conv import ConvLayer as Conv
 
 class TestConvLayer(unittest.TestCase):
     def test_init(self):
+        config = {
+            ''
+        }
+
         l = Conv([2, 2], 2)
         self.assertEqual(l.hk, 2)
         self.assertEqual(l.wk, 2)

@@ -33,43 +33,42 @@ class FullyConnectedLayer(Layer):
     it provides 3 utility functions
     '''
     def __init__(self, config):
-        super(FullyConnectedLayer, self).__init__()
-        self.type = 'FullyConnected'
+        super(FullyConnectedLayer, self).__init__(config)
         self.config = config
+        self.type = 'FullyConnected'
         self.shape = config['shape']
-        self.dim_out = np.prod(self.shape, dtype=int)
+        self.dim = np.prod(self.shape, dtype=int)
 
-    def accept(self, shape_in):
-        
-
-        self.shape_in = shape_in
+    def accept(self, src_shape):
+        self.shape_in = src_shape
         self.dim_in = np.prod(self.shape_in, dtype=int)
         
         # params
-        self.w = np.random.normal(0, 1.0 / np.sqrt(self.dim_in), [self.dim_in, self.dim_out])
-        self.b = np.random.normal(0, 1.0 / np.sqrt(self.dim_in), [1, self.dim_out])
-        
+        self.param = {
+            'w' : np.random.randn(self.dim_in, self.dim) / np.sqrt(self.dim_in)  
+          , 'b' : np.ones(1, self.dim) * 0.1
+        }    
+
         # cache
-        self.x = None
-        self.dw_m = np.zeros([self.dim_in, self.dim_out])
-        self.db_m = np.zeros([1, self.dim_out])
-        self.dw = None
-        self.db = None
         return True
         
     def forward(self, x):
-        self.x = x
-        return utils.forward(x, self.w, self.b) 
-        
+        cache = {
+            'x' : x
+        }
+        y = utils.forward(x, self.param['w'], self.param['b']) 
+        return y, cache
+
     def backward(self, dy):
-        N = dy.shape[0]
-        dx, dw, db = utils.backward(dy, self.x, self.w)
-        self.dw = dw
-        self.db = db
-        return dx
+        dx, dw, db = utils.backward(dy, self.cache['x'], self.param['w'])
+        dparam = {
+            'w' : dw
+          , 'b' : db
+        }        
+        return dx, dparam
     
-    def update(self, config):
-        self.dw_m = utils.compute_momentum(self.dw_m, self.dw, config)    
-        self.dw_b = utils.compute_momentum(self.db_m, self.db, config)
+    def learn(self, dparam):
+        self.dw_m = utils.compute_momentum(self.dw_m, dparam['w'], config)    
+        self.dw_b = utils.compute_momentum(self.db_m, dparam['b'], config)
         self.w += self.dw_m
         self.b += self.db_m

@@ -3,44 +3,47 @@ class Layer:
         '''
         five common parameters of all types of layer
         '''
-        self.type = 'Unknown'
-        self.shape_in = []
-        self.shape = []
-        self.dim_in = 0
-        self.dim_out = 0
+        self.config = config
         
+        self.type = 'Unknown'
+        
+        # input shape and dimension
+        self.shape_in = []
+        self.dim_in = 0
+        
+        # output shape and dimension
+        self.shape = []
+        self.dim = 0
+        
+        # model param
+        self.param = {}
+
+        # storing all intermediate
+        self.cache = {}
+
     def __repr__(self):
         return '{0} Layer | {1} => {2}'.format(self.type, self.shape_in, self.shape)
 
     # each layer type, please implement the following
     def accept(self, src):
         '''
-        given a src with is a shape 
-        if you can take src as input, update shape as your output 
-        return True
-        if not return false
+        try to accecpt a src layer
         '''
         raise Exception('accept is not implemented')
 
     def forward(self, x):
         '''
-        given x, 
-        (1) use self.param to compute a y,
-        (2) set self.cahce if needed
-        (3) return y
+        given x, return output and cache
         '''
         raise Exception('forward is not implemented')
 
     def backward(self, dy):
         '''
-        given dy,
-        (1) use self.cache to comput dx
-        (2) set self.param accordingly
-        (3) return dx
+        given dy, return dparam and dx
         '''
         raise Exception('backward is not implemented')
 
-    def update(self, config):
+    def learn(self, dparam):
         '''
         call after backward
         '''
