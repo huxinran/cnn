@@ -26,5 +26,5 @@ class ReluLayer(Layer):
         dparam = None
         return dx, dparam
     
-    def learn(self, dparam):
+    def learn(self, dparam, step_size):
         return

@@ -7,7 +7,7 @@ class MaxPoolLayer(Layer):
     def __init__(self, config):
         super(MaxPoolLayer, self).__init__(config)
         self.type = 'MaxPool'
-        self.shape_k = config['shape_k'] 
+        self.shape_k = config['kernel_shape'] 
         self.pad = (0, 0)
         self.stride = self.shape_k
 
@@ -30,7 +30,7 @@ class MaxPoolLayer(Layer):
                                           self.stride)
 
         self.dim_in = np.prod(self.shape_in, dtype=int)
-        self.dim_out = np.prod(self.shape, dtype=int)
+        self.dim = np.prod(self.shape, dtype=int)
         self.dim_k = np.prod(self.shape_k, dtype=int)
         
         # cache
@@ -40,10 +40,12 @@ class MaxPoolLayer(Layer):
     def forward(self, x):
         N = x.shape[0]
         
-        y = np.zeros([N, self.dim_out])
+        y = np.zeros([N, self.dim])
         
-        self.max_indice = np.zeros([N, self.dim_out], dtype=int)
-        
+        cache = {
+            'max_indice' : np.zeros([N, self.dim], dtype=int)
+        }        
+
         for i in range(N):
             fxi = utils.flatten(x[i,].reshape(self.shape_in), 
                                 self.shape_in, 
@@ -52,10 +54,11 @@ class MaxPoolLayer(Layer):
                                 self.stride, 
                                 self.indice).reshape(-1, self.dim_k)
 
-            self.max_indice[i, ] = np.argmax(fxi, axis=1)
+            cache['max_indice'][i,] = np.argmax(fxi, axis=1)
 
-            y[i, ] = fxi[np.arange(self.dim_out), self.max_indice[i, ]].reshape(-1, self.shape_in[0]).T.ravel()
-        return y
+            y[i, ] = fxi[np.arange(self.dim), cache['max_indice'][i, ]].reshape(-1, self.shape_in[0]).T.ravel()
+        
+        return y, cache
 
     def backward(self, dy):
         N = dy.shape[0]
@@ -63,9 +66,9 @@ class MaxPoolLayer(Layer):
         dx = np.zeros([N, self.dim_in])
 
         for i in range(N):
-            dfxi = np.zeros([self.dim_out, self.dim_k])
+            dfxi = np.zeros([self.dim, self.dim_k])
 
-            dfxi[np.arange(self.dim_out), self.max_indice[i,]] = dy[i,].reshape(self.shape).transpose([1, 2, 0]).ravel()
+            dfxi[np.arange(self.dim), self.cache['max_indice'][i,]] = dy[i,].reshape(self.shape).transpose([1, 2, 0]).ravel()
             
             dx[i, ] = utils.unflatten(dfxi, 
                                       self.shape_in, 
@@ -73,7 +76,7 @@ class MaxPoolLayer(Layer):
                                       self.pad, 
                                       self.stride, 
                                       self.indice).ravel()
-        return dx
+        return dx, None
       
-    def learn(self, dparam):
-        pass
+    def learn(self, dparam, step_size):
+        return

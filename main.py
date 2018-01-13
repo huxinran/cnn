@@ -16,18 +16,61 @@ from fc import FullyConnectedLayer as FC
 from conv import ConvLayer as Conv
 from relu import ReluLayer as Relu
 from maxpool import MaxPoolLayer as MaxPool
-from rnn import RNNLayer as RNN
-from lstm import LSTMLayer as LSTM
 
 from utils import normalize
-import keras
 
 def main():
     """
     main func
     """
+    np.random.seed(42)
+    (data, label) = cifar()
+    N = 1000
+    data = np.array(data, dtype=float)[:N,]
+    label = np.array(label)[:N,]
 
-    print(1)
+    data = normalize(data)
+    config = {
+        'input_shape' : [3, 32, 32]
+      , 'mu' : 0.9
+      , 'step_size' : 10.0
+      , 'step_decay' : 0.95
+    }
+
+    nn = Net(config)
+    conv1 = Conv({
+        'kernel_shape' : (3, 3)
+      , 'output_depth' : 32
+      , 'pad' : [0, 0]
+      , 'stride' : [1, 1]
+    })
+    
+    relu1 = Relu({})
+    
+    conv2 = Conv({
+        'kernel_shape' : (3, 3)
+      , 'output_depth' : 32
+      , 'pad' : [0, 0]
+      , 'stride' : [1, 1]
+    })
+
+    relu2 = Relu({})
+
+    pool = MaxPool({
+        'kernel_shape' : (2, 2)
+    })
+    
+    fc = FC({
+        'shape' : 10
+    })
+
+    nn.add(conv1)
+    nn.add(relu1)
+    nn.add(pool)
+    nn.add(fc)
+    
+    print(nn)
+    nn.fit(data, label, 1000)
 
 
 

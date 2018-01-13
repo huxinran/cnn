@@ -34,22 +34,20 @@ class Net:
             dx, dparam = l.backward(dx)
             l.dparam = dparam
 
-    def learn(self):
+    def learn(self, step_size):
         for l in self.layer:
-            l.learn(l.dparam)
+            l.learn(l.dparam, step_size)
 
     def evaluate(self, y, y_true):
         p = utils.softmax(y)
         return utils.cross_entropy(p, y_true)
 
-    def train_one_iteration(self, x, y_true):
+    def train_one_iteration(self, x, y_true, step_size):
         y = self.forward(x)
-        
         loss, dy = self.evaluate(y, y_true)
-        
         self.backward(dy)
 
-        self.learn()
+        self.learn(step_size)
 
         return loss, y
 
@@ -67,7 +65,7 @@ class Net:
             if t % 10 == 0:
                 self.config['step_size'] *= self.config['step_decay']
 
-            loss, yfit = self.train_one_iteration(x, y)
+            loss, yfit = self.train_one_iteration(x, y, self.config['step_size'])
      
             msg = self.book_keeping_loss(loss)
             

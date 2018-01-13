@@ -11,9 +11,10 @@ def plot_color(img):
     plt.pause(0.1)
 
 
-def adam(param, paramSum, dparam):
+def adam(param, paramSum, dparam, step_size):
     for k in param.keys():
-        param[k] -= dparam[k]
+        paramSum[k] += dparam[k] ** 2
+        param[k] -= (dparam[k] / (paramSum[k] ** 0.5)) * step_size
 
 def softmax(y):
     '''
@@ -148,7 +149,8 @@ def normalize(data):
     normalize data
     """
     data -= np.mean(data, axis=0)
-    data /= np.sqrt(np.var(data, axis=0)) 
+    #print(np.var(data, axis=0))
+    #data /= np.sqrt(np.var(data, axis=0)) 
     return data
 
 

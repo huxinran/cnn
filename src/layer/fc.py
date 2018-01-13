@@ -50,8 +50,8 @@ class FullyConnectedLayer(Layer):
         }    
 
         self.paramSum = {
-            'w' : np.zeros_like(self.param['w'])
-          , 'b' : np.zeros_like(self.param['b'])
+            'w' : np.ones_like(self.param['w']) * 1e-8
+          , 'b' : np.ones_like(self.param['b']) * 1e-8
         }
         # cache
         return True
@@ -64,12 +64,13 @@ class FullyConnectedLayer(Layer):
         return y, cache
 
     def backward(self, dy):
+        N = dy.shape[0]
         dx, dw, db = utils.backward(dy, self.cache['x'], self.param['w'])
         dparam = {
-            'w' : dw
-          , 'b' : db
+            'w' : dw / N
+          , 'b' : db / N
         }        
         return dx, dparam
     
-    def learn(self, dparam):
-        utils.adam(self.param, self.paramSum, dparam)
+    def learn(self, dparam, step_size):
+        utils.adam(self.param, self.paramSum, dparam, step_size)

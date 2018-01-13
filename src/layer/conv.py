@@ -32,7 +32,7 @@ class ConvLayer(Layer):
         self.hout = self.hpos.size
         self.wout = self.wpos.size
         self.shape = [self.dout, self.hout, self.wout]
-        self.dim_out = np.prod(self.shape, dtype=int)
+        self.dim = np.prod(self.shape, dtype=int)
         self.indice = utils.flatten_index(self.shape_in, 
                                           self.shape_k, 
                                           self.pad, 
@@ -46,8 +46,8 @@ class ConvLayer(Layer):
         }
 
         self.paramSum = {
-            'w' : np.zeros_like(self.param['w'])
-          , 'b' : np.zeros_like(self.param['b'])
+            'w' : np.ones_like(self.param['w']) * 1e-8
+          , 'b' : np.ones_like(self.param['b']) * 1e-8
         }
         
         # cache
@@ -63,19 +63,21 @@ class ConvLayer(Layer):
         '''
         '''
         N = x.shape[0]
-        y = np.zeros((N, self.dim_out)) 
+        y = np.zeros((N, self.dim)) 
 
-        flatten_x = np.zeros((N, self.hout * self.wout, self.dim_k))
+        cache = {
+            'flatten_x' : np.zeros((N, self.hout * self.wout, self.dim_k))
+        }
         
         for i in range(N):
-            flatten_x[i,] = utils.flatten(x[i, :].reshape(self.shape_in),
+            cache['flatten_x'][i,] = utils.flatten(x[i, :].reshape(self.shape_in),
                                           self.shape_in, 
                                           self.shape_k, 
                                           self.pad,
                                           self.stride, 
                                           self.indice).reshape(self.hout * self.wout, -1) 
-            y[i,] = utils.forward(flatten_x[i,], self.param['w'], self.param['b']).T.ravel()
-        return y, flatten_x
+            y[i,] = utils.forward(cache['flatten_x'][i,], self.param['w'], self.param['b']).T.ravel()
+        return y, cache
 
     def backward(self, dy):
         N = dy.shape[0]
@@ -85,11 +87,12 @@ class ConvLayer(Layer):
             'w' : np.zeros([self.dim_k, self.dout])
           , 'b' : np.zeros([1, self.dout])
         }
-
+        
         for i in range(N):
             dyi = dy[i, :].reshape(self.dout, -1).T
-
-            dfxi, dwi, dbi = utils.backward(dyi, self.cache['flatten_x'][i, ], self.param['w'])
+            fxi = self.cache['flatten_x'][i, ]
+            
+            dfxi, dwi, dbi = utils.backward(dyi, fxi, self.param['w'])
 
             dx[i,] = utils.unflatten(dfxi, 
                                      self.shape_in,
@@ -99,8 +102,11 @@ class ConvLayer(Layer):
                                      self.indice).ravel() 
             dparam['w'] += dwi
             dparam['b'] += dbi
- 
+
+        dparam['w'] /= N
+        dparam['b'] /= N
+
         return dx, dparam
     
-    def learn(self, dparam):
-        utils.adam(self.param, self.paramSum, dparam)
+    def learn(self, dparam, step_size):
+        utils.adam(self.param, self.paramSum, dparam, step_size)
