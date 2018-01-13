@@ -44,6 +44,11 @@ class ConvLayer(Layer):
             'w' : np.random.randn(self.dim_k, self.dout) / np.sqrt(self.dim_k)
           , 'b' : np.ones([1, self.dout]) * 0.1
         }
+
+        self.paramSum = {
+            'w' : np.zeros_like(self.param['w'])
+          , 'b' : np.zeros_like(self.param['b'])
+        }
         
         # cache
         self.cache = {}
@@ -97,8 +102,5 @@ class ConvLayer(Layer):
  
         return dx, dparam
     
-    def learn(self):
-        self.dw = utils.compute_momentum(self.dw, self.dw_cache, self.config)
-        self.db = utils.compute_momentum(self.db, self.db_cache, self.config)
-        self.w += self.dw_m
-        self.b += self.db_m
+    def learn(self, dparam):
+        utils.adam(self.param, self.paramSum, dparam)

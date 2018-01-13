@@ -11,6 +11,10 @@ def plot_color(img):
     plt.pause(0.1)
 
 
+def adam(param, paramSum, dparam):
+    for k in param.keys():
+        param[k] -= dparam[k]
+
 def softmax(y):
     '''
     comput softmax of a list of value

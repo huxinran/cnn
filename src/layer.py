@@ -17,6 +17,8 @@ class Layer:
         
         # model param
         self.param = {}
+        
+        self.dparam = {}
 
         # storing all intermediate
         self.cache = {}

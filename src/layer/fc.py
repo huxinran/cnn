@@ -46,9 +46,13 @@ class FullyConnectedLayer(Layer):
         # params
         self.param = {
             'w' : np.random.randn(self.dim_in, self.dim) / np.sqrt(self.dim_in)  
-          , 'b' : np.ones(1, self.dim) * 0.1
+          , 'b' : np.ones([1, self.dim]) * 0.1
         }    
 
+        self.paramSum = {
+            'w' : np.zeros_like(self.param['w'])
+          , 'b' : np.zeros_like(self.param['b'])
+        }
         # cache
         return True
         
@@ -68,7 +72,4 @@ class FullyConnectedLayer(Layer):
         return dx, dparam
     
     def learn(self, dparam):
-        self.dw_m = utils.compute_momentum(self.dw_m, dparam['w'], config)    
-        self.dw_b = utils.compute_momentum(self.db_m, dparam['b'], config)
-        self.w += self.dw_m
-        self.b += self.db_m
+        utils.adam(self.param, self.paramSum, dparam)
