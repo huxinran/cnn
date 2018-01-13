@@ -40,17 +40,18 @@ class FullyConnectedLayer(Layer):
         self.dim_out = np.prod(self.shape, dtype=int)
 
     def accept(self, shape_in):
-        
-
         self.shape_in = shape_in
         self.dim_in = np.prod(self.shape_in, dtype=int)
         
         # params
-        self.w = np.random.normal(0, 1.0 / np.sqrt(self.dim_in), [self.dim_in, self.dim_out])
-        self.b = np.random.normal(0, 1.0 / np.sqrt(self.dim_in), [1, self.dim_out])
-        
+        self.param = {
+            'w' : np.random.randn(self.dim_in, self.dim_out) / np.sqrt(self.dim_in)
+          , 'b' : np.random.ones(1, self.dim_out) * 0.1
+        }
+
         # cache
-        self.x = None
+        self.cache = {}
+        
         self.dw_m = np.zeros([self.dim_in, self.dim_out])
         self.db_m = np.zeros([1, self.dim_out])
         self.dw = None
@@ -58,15 +59,21 @@ class FullyConnectedLayer(Layer):
         return True
         
     def forward(self, x):
-        self.x = x
-        return utils.forward(x, self.w, self.b) 
+        cache = {
+            'x' : x
+        }
+        y = utils.forward(x, self.params['w'], self.params['b'])
+        return y, cache
         
     def backward(self, dy):
-        N = dy.shape[0]
-        dx, dw, db = utils.backward(dy, self.x, self.w)
+        dx, dw, db = utils.backward(dy, self.cache['x'], self.param['w'])
         self.dw = dw
         self.db = db
-        return dx
+        dparam = {
+            'w' : dw
+          , 'b' : db
+        }
+        return dx, dparam
     
     def update(self, config):
         self.dw_m = utils.compute_momentum(self.dw_m, self.dw, config)    

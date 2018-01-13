@@ -15,33 +15,27 @@ class Layer:
     # each layer type, please implement the following
     def accept(self, src):
         '''
-        given a src with is a shape 
-        if you can take src as input, update shape as your output 
-        return True
-        if not return false
+        try to accept a src layer with a specific shape
+
+        if this layer can accept the src as input, 
+        return True, otherwise return false
         '''
         raise Exception('accept is not implemented')
 
     def forward(self, x):
         '''
-        given x, 
-        (1) use self.param to compute a y,
-        (2) set self.cahce if needed
-        (3) return y
+        given data x, return output and cache
         '''
         raise Exception('forward is not implemented')
 
     def backward(self, dy):
         '''
-        given dy,
-        (1) use self.cache to comput dx
-        (2) set self.param accordingly
-        (3) return dx
+        given dy, compute d_param and d_x
         '''
         raise Exception('backward is not implemented')
 
-    def update(self, config):
+    def update(self, d_param):
         '''
-        call after backward
+        
         '''
         raise Exception('learn is not implmented')
