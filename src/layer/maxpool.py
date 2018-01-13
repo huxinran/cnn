@@ -4,10 +4,10 @@ import utils
 
 
 class MaxPoolLayer(Layer):
-    def __init__(self, shape_k=(2, 2)):
-        super(MaxPoolLayer, self).__init__()
+    def __init__(self, config):
+        super(MaxPoolLayer, self).__init__(config)
         self.type = 'MaxPool'
-        self.shape_k = shape_k 
+        self.shape_k = config['shape_k'] 
         self.pad = (0, 0)
         self.stride = self.shape_k
 

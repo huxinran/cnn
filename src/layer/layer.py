@@ -1,5 +1,5 @@
 class Layer:
-    def __init__(self):
+    def __init__(self, config):
         '''
         five common parameters of all types of layer
         '''

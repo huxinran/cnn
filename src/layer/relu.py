@@ -3,10 +3,10 @@ import numpy as np
 
 class ReluLayer(Layer):
     def __init__(self, config):
-        super(ReluLayer, self).__init__()
-        self.config = config
+        super(ReluLayer, self).__init__(config)
         self.type = 'Relu'
-    
+        self.config = config
+        
     def accept(self, shape_in):
         self.shape_in = shape_in
         self.shape = shape_in
