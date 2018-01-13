@@ -89,17 +89,29 @@ class RNNLayer(Layer):
 
         
     def sample(self, c, l, char2idx, idx2char, V, U, W, bh, by):
-        y = [None] * (l + 1)
+        ll = len(char2idx)
+        yp = [np.zeros([1, ll])] * l
         x = np.zeros([1, self.dim_in])
         x[0][char2idx[c]] = 1.0
-        y[0] = c
+
         h = np.zeros([1, self.dim_hidden])
-        for t in range(l):
-            h = np.tanh(x @ U + h @ W + bh)
-            yhat = h @ V + by
-            idx = np.argmax(yhat)
-            y[t + 1] = idx2char[idx]
-        return ''.join(y)
+        for i in range(100):
+            for t in range(l):
+                h = np.tanh(x @ U + h @ W + bh)
+                yhat = h @ V + by
+                ypt = utils.softmax(yhat)
+                idx = np.random.choice(ll, 1, p=ypt[0])
+                
+                yp[t] += ypt
+                x = np.zeros([1, self.dim_in])
+                x[0][idx] = 1.0
+                c = [idx2char[np.argmax(p)] for p in ypt]
+                print(''.join(c))
+            
+        
+            
+
+        return ''.join(c)
         #self.V -= self.config['step_size'] * dVt
         #self.W -= self.config['step_size'] * dWt
         #self.U -= self.config['step_size'] * dUt

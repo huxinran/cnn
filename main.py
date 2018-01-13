@@ -27,14 +27,14 @@ def main():
     """
     
     text, x, y, char2idx, idx2char = getty()
-    T = 50
+    T = 100
        
     config = {
         'dim_hidden' : 200
       , 'l' : T
       , 'clip' : 5
       , 'mu' : 0.9
-      , 'step_size' : 0.001
+      , 'step_size' : 0.01
     }
 
     #np.random.seed(42)
